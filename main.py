@@ -206,22 +206,13 @@ def main():
     # for x in X[0:5]:
     #     ShowImage(x)
     
-    # originalNN_parameters = {'input_size_net':(224,224,3), 'output_size':2}
-    # leaveOneOut(X, Y, "OriginalNN", createModelMnist, originalNN_parameters)
     
     originalNN_parameters = {'input_size_net':(224,224,3), 'output_size':2}
     NASExperiment(X, Y, "OriginalNN", OriginalNN, originalNN_parameters)
     
-    # data_sets_names = ["X_WL"]
-    # data_sets = [X]
     
-    # OriginalNN(data_sets_names, data_sets, Y)
-    N_training = 50
-    X_train = X[:N_training]
-    Y_train = Y[:N_training]
-    X_test = X[N_training:]
-    Y_test = Y[N_training:]
-    # autokerasModel(X_train, Y_train, X_test, Y_test)
+    autokeras_parameters = {'validation_split':0.15, 'epochs':50}
+    # NASExperiment(X, Y, "Autokeras", autokerasModel, autokeras_parameters)
 
 if __name__ == '__main__':
   main()

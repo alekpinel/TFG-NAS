@@ -27,16 +27,4 @@ def autokerasModel(X, Y, validation_split=0.15, epochs=50):
                     validation_split=validation_split,
                     epochs=epochs)
     
-    return searchmodel
-    
-    # print("Red buscada")
-    # model = searchmodel.export_model()
-    
-    # print(model.summary())
-    
-    # # Predict with the best model.
-    # predicted_y = model.predict(X_test)
-    # print(predicted_y)
-    
-    # # Evaluate the best model with testing data.
-    # print(searchmodel.evaluate(X_test, y_test))
+    return searchmodel.export_model()
