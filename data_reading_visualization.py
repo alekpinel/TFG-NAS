@@ -141,6 +141,11 @@ def ResultsToFile(model_name, results):
     f.write(results)
     f.close()
     
+def SummaryString(model):
+    stringlist = []
+    model.summary(print_fn=lambda x: stringlist.append(x))
+    short_model_summary = "\n".join(stringlist)
+    return short_model_summary
     
 def createConfusionMatrix(cm,name_clf, tipo_de_clas=0, save=True):
     if(tipo_de_clas == 0):

@@ -14,13 +14,13 @@ from sklearn.preprocessing import LabelEncoder
 import autokeras as ak
 
 
-def autokerasModel(X, Y, validation_split=0.15, epochs=50):
+def autokerasModel(X, Y, validation_split=0.15, epochs=50, max_trials=100):
     # print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
     
     # Initialize the image classifier.
     searchmodel = ak.ImageClassifier(
         overwrite=True,
-        max_trials=1)
+        max_trials=max_trials)
     
     # Feed the image classifier with training data.
     searchmodel.fit(X, Y,

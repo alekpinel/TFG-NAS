@@ -6,11 +6,9 @@ Created on Fri Dec  4 09:49:23 2020
 """
 
 import math
-import cv2
 import numpy as np
 import keras
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split, KFold, GridSearchCV, LeaveOneOut
+from sklearn.model_selection import train_test_split, LeaveOneOut
 from numpy.random import seed
 import time
 from tensorflow.keras.utils import to_categorical
@@ -18,12 +16,12 @@ import statistics
 from sklearn import metrics
 from keras.models import clone_model
 
-from data_reading_visualization import ReadData, CalculateAccuracy, extraerSP_SS, ResultsToFile, createConfusionMatrix, convertToBinary
+from data_reading_visualization import ReadData, CalculateAccuracy, extraerSP_SS, ResultsToFile, createConfusionMatrix, convertToBinary, SummaryString
 from original_nn import OriginalNN 
 from autokeras_model import autokerasModel
 
 def Compile(model):
-    model.compile(loss=keras.losses.categorical_crossentropy,
+    model.compile(loss=keras.losses.binary_crossentropy,
               optimizer=keras.optimizers.Adam(),
               metrics=['accuracy'])
 
@@ -51,19 +49,21 @@ def NASExperiment(X, Y, model_name, NAS_function, NAS_parameters, test_percent=0
     
     if (verbose>=1):
         print(f"{model_name}:")
+        print(SummaryString(NAS_model))
         
     result_s = f"{model_name}:"
-    result_s += str(NAS_model.summary())
+    result_s += SummaryString(NAS_model)
     
     # With the final model, apply leave one out
     cm, fit_time = leaveOneOut(X_train, X_test, Y_train, Y_test, NAS_model, epochs=epochs, batch_size=batch_size, verbose=1)
     
     # Extract the results and show them
     accuracy, specificity, sensitivity, precision, f1score = extraerSP_SS(cm)
-    result_s += f"\nACC:{accuracy:.3f} \nSP:{specificity:.3f} \nSS:{sensitivity:.3f} \nPr:{precision:.3f} \nScore:{f1score:.3f} \nSearching time:{searching_time:.3f} \nFitting time:{fit_time:.3f}"
+    statistics_s = f"\nRESULTS: \nACC:{accuracy:.3f} \nSP:{specificity:.3f} \nSS:{sensitivity:.3f} \nPr:{precision:.3f} \nScore:{f1score:.3f} \nSearching time:{searching_time:.3f} \nFitting time:{fit_time:.3f}"
+    result_s += statistics_s
     
     if (verbose):
-        print(f"\nACC:{accuracy:.3f} \nSP:{specificity:.3f} \nSS:{sensitivity:.3f} \nPr:{precision:.3f} \nScore:{f1score:.3f} \nSearching time:{searching_time:.3f} \nFitting time:{fit_time:.3f}")
+        print(statistics_s)
     
     if (save_results):
         ResultsToFile(model_name, result_s)
@@ -78,8 +78,6 @@ def leaveOneOut(X_train, X_test, Y_train, Y_test, original_model, epochs=50, bat
     times = []
     
     labels_test = Y_test
-    Y_train = to_categorical(Y_train)
-    Y_test = to_categorical(Y_test)
   
     contador = 0
     for t_v_i, test_i in loo.split(X_test):
@@ -115,7 +113,7 @@ def leaveOneOut(X_train, X_test, Y_train, Y_test, original_model, epochs=50, bat
         y_predict.append(y_pre)
         
         if (verbose):
-            print(f"Eval Accuracy: {CalculateAccuracy(np.argmax(Y_fold_test, axis=1), y_pre)}")
+            print(f"Eval Accuracy: {CalculateAccuracy(Y_fold_test, y_pre)}")
         
         contador +=1
   
@@ -123,74 +121,6 @@ def leaveOneOut(X_train, X_test, Y_train, Y_test, original_model, epochs=50, bat
     mean_time = sum(times) / len(times)
     
     return cm, mean_time
-
-def leaveOneOut2(X, Y, model_name, model_function, model_parameters, epochs=50, batch_size=32, verbose=1, save_results=True):
-  loo = LeaveOneOut()
-  loo.get_n_splits(X)
-  y_predict = []
-  times = []
-  
-  labels = Y
-  y = to_categorical(Y)
-
-  contador = 0
-  for t_v_i, test_i in loo.split(X):
-      if (verbose):
-          print(f"LOOP {contador}:")
-     
-      
-
-      X_train = X[t_v_i]
-      y_train = y[t_v_i]
-
-      X_test = X[test_i]
-      y_test = y[test_i]
-      
-      start_time = time.time()
-      
-      model = model_function(**model_parameters)
-      
-      if (verbose>=2):
-          print(f"{model_name}:")
-          print(model.summary())
-      
-      h = model.fit(X_train, y_train, epochs=epochs ,batch_size=batch_size, verbose=0)
-        
-      end_time = time.time()
-      seconds = end_time - start_time
-      times.append(seconds)
-      
-      if (verbose):
-          print("Train Loss ",round(statistics.mean(h.history['loss']),3))
-          print("Train Accuracy ",round(statistics.mean(h.history['accuracy']),3))
-
-      y_pre = model(X_test)
-      y_pre = [np.argmax(values) for values in y_pre]
-      # print(f"Y_true: {np.argmax(y_test, axis=1)} Y_pre: {y_pre}")
-      y_predict.append(y_pre)
-      
-      if (verbose):
-          print(f"Eval Accuracy: {CalculateAccuracy(np.argmax(y_test, axis=1), y_pre)}")
-      
-      contador +=1
-
-  cm = metrics.confusion_matrix(labels, y_predict)
-  accuracy, specificity, sensitivity, precision, f1score = extraerSP_SS(cm)
-  mean_time = sum(times) / len(times)
-  
-  result_s = f"{model_name}: \nACC:{accuracy:.3f} \nSP:{specificity:.3f} \nSS:{sensitivity:.3f} \nPr:{precision:.3f} \nScore:{f1score:.3f} \nTime:{mean_time:.3f}"
-  
-  if (verbose):
-      print(result_s)
-
-  if (save_results):
-      ResultsToFile(model_name, result_s)
-  
-  createConfusionMatrix(cm, model_name, save=save_results)
-
-  return accuracy, specificity, sensitivity, precision, f1score
-
-
 
 def main():
     print("MAIN")
@@ -207,12 +137,11 @@ def main():
     #     ShowImage(x)
     
     
-    originalNN_parameters = {'input_size_net':(224,224,3), 'output_size':2}
+    originalNN_parameters = {'input_size_net':(224,224,3), 'output_size':1}
     NASExperiment(X, Y, "OriginalNN", OriginalNN, originalNN_parameters)
     
-    
-    autokeras_parameters = {'validation_split':0.15, 'epochs':50}
-    # NASExperiment(X, Y, "Autokeras", autokerasModel, autokeras_parameters)
+    autokeras_parameters = {'validation_split':0.15, 'epochs':50, 'max_trials':100}
+    NASExperiment(X, Y, "Autokeras", autokerasModel, autokeras_parameters)
 
 if __name__ == '__main__':
   main()

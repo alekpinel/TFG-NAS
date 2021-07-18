@@ -49,10 +49,9 @@ def OriginalNN(input_size_net, output_size, X=None, Y=None):
 
   model.add(Flatten())
 
-  #model.add(Dense(64, activation='relu'))
-  #model.add(Dropout(0.5))
-
-  model.add(Dense(output_size, activation='softmax'))
+  # model.add(Dense(output_size, activation='softmax'))
+  model.add(Dense(output_size, activation='sigmoid'))
+  
 
   model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=keras.optimizers.Adam(),
