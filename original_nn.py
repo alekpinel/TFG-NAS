@@ -45,7 +45,7 @@ class color:
    UNDERLINE = '\033[4m'
    END = '\033[0m'
 
-def createModelMnist(input_size_net, output_size):
+def OriginalNN(input_size_net, output_size, X=None, Y=None):
   model = Sequential()
   model.add(Conv2D(32, kernel_size=(3, 3),
                   activation='relu',
@@ -86,7 +86,7 @@ def leaveOneOutBinary(X, y_no_categorical, epocas,tam_batch):
       print(color.BOLD + 'LOO '+ str(contador) + ":" + color.END)
       contador +=1
 
-      model = createModelMnist((224,224,3), 2)
+      model = OriginalNN((224,224,3), 2)
       # print(model.summary())
 
       X_train = X[t_v_i]
@@ -108,7 +108,7 @@ def leaveOneOutBinary(X, y_no_categorical, epocas,tam_batch):
   return round(accuracy,3), round(specificity,3), round(sensitivity,3), round(precision,3), round(f1score,3)  , cm
 
 
-def OriginalNN(data_sets_names,data_sets, Y):
+def OriginalNN2(data_sets_names,data_sets, Y):
     df_salida_binary = pd.DataFrame(columns=["DS","ACC","Specificity","Sensitivity", "Precision", "Ponderacion"])
     df_salida_binary.head()
     

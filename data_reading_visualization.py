@@ -93,15 +93,19 @@ def CalculateAccuracy(Y, Pred):
 def extraerSP_SS(cmf):
   tp, fp, fn, tn = cmf.ravel()
   
-  accuracy = (tp + tn) / sum([tp,fp,fn,tn])
-
-  specificity = tn / (tn+fp)
-
-  sensitivity = tp / (tp+fn)
-
-  precision = tp / (tp+fp)
+  accuracy = specificity = sensitivity = precision = f1 = 0
   
-  f1 = 0
+  if (sum([tp,fp,fn,tn])>0):
+      accuracy = (tp + tn) / sum([tp,fp,fn,tn])
+
+  if ((tn+fp)>0):
+      specificity = tn / (tn+fp)
+
+  if ((tp+fn)>0):
+      sensitivity = tp / (tp+fn)
+
+  if ((tp+fp)>0):
+      precision = tp / (tp+fp)
   
   if ((sensitivity+precision)>0):
       f1 = 2 * ((sensitivity*precision)  / (sensitivity+precision))
@@ -157,6 +161,6 @@ def createConfusionMatrix(cm,name_clf, tipo_de_clas=0, save=True):
     
     if (save):
         resultpath = mainpath + "results/"
-        plt.savefig(resultpath + "cm_" + name_clf + ".png",  bbox_inches = 'tight')
+        plt.savefig(resultpath + name_clf + ".png",  bbox_inches = 'tight')
     plt.show()
     plt.close()

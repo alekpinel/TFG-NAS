@@ -1,7 +1,8 @@
 OriginalNN: 
-ACC:0.592 
-SP:0.308 
-SS:0.740 
-Pr:0.673 
-Score:0.705 
-Time:12.986
+ACC:0.522 
+SP:0.273 
+SS:0.750 
+Pr:0.529 
+Score:0.621 
+Searching time:0.095 
+Fitting time:12.294

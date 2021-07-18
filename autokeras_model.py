@@ -14,7 +14,7 @@ from sklearn.preprocessing import LabelEncoder
 import autokeras as ak
 
 
-def autokerasModel(X_train, y_train, X_test, y_test):
+def autokerasModel(X, Y, validation_split=0.15, epochs=50):
     # print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
     
     # Initialize the image classifier.
@@ -23,18 +23,20 @@ def autokerasModel(X_train, y_train, X_test, y_test):
         max_trials=1)
     
     # Feed the image classifier with training data.
-    searchmodel.fit(X_train, y_train,
-                    validation_split=0.15,
-                    epochs=50)
+    searchmodel.fit(X, Y,
+                    validation_split=validation_split,
+                    epochs=epochs)
     
-    print("Red buscada")
-    model = searchmodel.export_model()
+    return searchmodel
     
-    print(model.summary())
+    # print("Red buscada")
+    # model = searchmodel.export_model()
     
-    # Predict with the best model.
-    predicted_y = model.predict(X_test)
-    print(predicted_y)
+    # print(model.summary())
     
-    # Evaluate the best model with testing data.
-    print(searchmodel.evaluate(X_test, y_test))
+    # # Predict with the best model.
+    # predicted_y = model.predict(X_test)
+    # print(predicted_y)
+    
+    # # Evaluate the best model with testing data.
+    # print(searchmodel.evaluate(X_test, y_test))
