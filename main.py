@@ -108,8 +108,8 @@ def leaveOneOut(X_train, X_test, Y_train, Y_test, original_model, epochs=50, bat
             print(f"Train Time {seconds}")
   
         y_pre = new_model(X_fold_test)
-        y_pre = [np.argmax(values) for values in y_pre]
-        # print(f"Y_true: {np.argmax(y_test, axis=1)} Y_pre: {y_pre}")
+        y_pre = [1 if val > 0.5 else 0 for val in y_pre]
+        # print(f"Y_true: {Y_fold_test} Y_pre: {y_pre}")
         y_predict.append(y_pre)
         
         if (verbose):
@@ -138,9 +138,9 @@ def main():
     
     
     originalNN_parameters = {'input_size_net':(224,224,3), 'output_size':1}
-    NASExperiment(X, Y, "OriginalNN", OriginalNN, originalNN_parameters)
+    # NASExperiment(X, Y, "OriginalNN", OriginalNN, originalNN_parameters)
     
-    autokeras_parameters = {'validation_split':0.15, 'epochs':50, 'max_trials':100}
+    autokeras_parameters = {'validation_split':0.15, 'epochs':50, 'max_trials':20}
     NASExperiment(X, Y, "Autokeras", autokerasModel, autokeras_parameters)
 
 if __name__ == '__main__':
