@@ -378,27 +378,31 @@ class FPANet:
             block_size = [24,24, 40,40,40, 80,80,80,80, 112,112,112, 192,192,192, 320]
     
         self.block_filters = block_size
+        self.block_architectures = GenerateBlockArchitectureList()
+        
+        self.GenerateInitialState()
     
-    def Generate(self):
+    def GenerateInitialState(self):
         self.input = Input(shape=self.input_shape)
         self.blocks = []
         
         # block_code = ['Add', 'Id', 'Add', 'Id', 'No', 'Id', 'None', 'Id', 'No', 'No', 'Conv_8_2_5']
-        block_code = ['Add', 'Id', 'Add', 'Conv_8_2_5', 'No', 'Id', 'None', 'Id', 'No', 'No', 'Id']
-        block_code = ['Split', 'Id', 'Concat', 'Conv_8_2', 'Short_8_2', 'No', 'None', 'Id', 'No', 'No', 'Id']
-        block_code = ['Split', 'Id', 'Concat', 'Conv_8_1', 'Short_8_1', 'No', 'None', 'Id', 'No', 'No', 'Short_8_2']
+        # block_code = ['Add', 'Id', 'Add', 'Conv_8_2_5', 'No', 'Id', 'None', 'Id', 'No', 'No', 'Id']
+        # block_code = ['Split', 'Id', 'Concat', 'Conv_8_2', 'Short_8_2', 'No', 'None', 'Id', 'No', 'No', 'Id']
+        # block_code = ['Split', 'Id', 'Concat', 'Conv_8_1', 'Short_8_1', 'No', 'None', 'Id', 'No', 'No', 'Short_8_2']
+        
         x = self.input
         for n_filters in self.block_filters:
-            self.blocks.append(Block(block_code, n_filters))
+            self.blocks.append(Block(self.block_architectures[np.random.randint(0, len(self.block_architectures))], n_filters))
             # x = self.blocks[-1](x)
             # self.blocks[-1].SetTrainable(False)
         
+        # x = Flatten()(x)
+        self.output = Dense(self.output_shape, activation='softmax')
         
+        # self.model = Model(inputs = self.input, outputs = self.output)
         
-        x = Flatten()(x)
-        self.output = Dense(self.output_shape, activation='softmax') (x)
-        
-        self.model = Model(inputs = self.input, outputs = self.output)
+        self.Ensamble()
         
         print(self.model.summary())
     
@@ -406,9 +410,13 @@ class FPANet:
         x = self.input
         for block in self.blocks:
             x = block(x)
-        
+        x = Flatten()(x)
         x = self.output(x)
-        
+        self.model = Model(inputs = self.input, outputs = x)
+    
+    def ChangeBlock(self, block_index):
+        block_code = ['Add', 'Id', 'Add', 'Conv_8_2_5', 'No', 'Id', 'None', 'Id', 'No', 'No', 'Id']
+        self.blocks[block_index] = Block(block_code, self.block_filters[block_index])
     
     def Compile(self):
         loss = keras.losses.categorical_crossentropy
@@ -416,8 +424,8 @@ class FPANet:
         self.model.compile(optimizer='adam',
                       loss=loss,
                       metrics=['accuracy'])
-    def Train(self, X_train, Y_train, X_val, Y_val, epochs=2, batch_size=128):
         
+    def Train(self, X_train, Y_train, X_val, Y_val, epochs=2, batch_size=128):
         return self.model.fit(X_train, Y_train,
                             batch_size=batch_size,
                             epochs=epochs,
@@ -458,7 +466,11 @@ def main():
     # GenerateBlockArchitectureList()
     
     model = FPANet(input_shape=input_shape, output_shape=output_shape, block_size=[24,40, 40])
-    model.Generate()
+    # model.Generate()
+    model.Compile()
+    model.Train(X_train, y_train, X_test, y_test)
+    model.ChangeBlock(0)
+    model.Ensamble()
     model.Compile()
     model.Train(X_train, y_train, X_test, y_test)
 
