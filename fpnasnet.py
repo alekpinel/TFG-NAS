@@ -12,7 +12,7 @@ import keras
 import matplotlib.pyplot as plt
 
 from keras.models import Sequential, Model
-from keras.layers import Input, Dense, Dropout, Flatten, ReLU
+from keras.layers import Input, Dense, Dropout, Flatten, ReLU, Lambda
 from keras.layers import Conv2D, MaxPooling2D, Activation, Add, Concatenate, BatchNormalization, DepthwiseConv2D
 from keras.optimizers import SGD
 import tensorflow as tf
@@ -27,7 +27,6 @@ def GenerateBlockArchitectureList():
     EDGES = ['No', 'Id', 'Conv']
     RATIOS = [4, 6, 8]
     STRIDES = [1, 2]
-    KERNEL_SIZE = [3, 5]
     
     def PossibleEdges(block):
         poss_edges = ['Id', 'No']
@@ -113,6 +112,23 @@ def GenerateBlockArchitectureList():
             if (block[8] == 'Conv' or block[9] == 'Conv'):
                 continue
             
+            # Add shortcouts next to convolutions after the split
+            if (block[3] == 'Conv'):
+                if (block[4] == 'Id'):
+                    block[4] = 'Short'
+                if (block[5] == 'Id'):
+                    block[5] = 'Short'
+            if (block[4] == 'Conv' or block[5]=='Conv'):
+                block[3] = 'Short'
+                
+            if (block[7] == 'Conv'):
+                if (block[8] == 'Id'):
+                    block[8] = 'Short'
+                if (block[9] == 'Id'):
+                    block[9] = 'Short'
+            if (block[8] == 'Conv' or block[9]=='Conv'):
+                block[7] = 'Short'
+                          
             new_blocks.append(block)
         return new_blocks
     
@@ -120,12 +136,17 @@ def GenerateBlockArchitectureList():
         new_blocks = []
         for block in all_blocks:
             concat_index = block.index('Conv')
+            short_index = None
+            if ('Short' in block):
+                short_index = block.index('Short')
+                
             for ratio in RATIOS:
                 for strides in STRIDES:
-                    for kernel in KERNEL_SIZE:
-                        new_block = block.copy()
-                        new_block[concat_index] = f"Conv_{ratio}_{strides}_{kernel}"
-                        new_blocks.append(new_block)
+                    new_block = block.copy()
+                    new_block[concat_index] = f"Conv_{ratio}_{strides}"
+                    if (short_index != None):
+                        new_block[short_index] = f"Short_{ratio}_{strides}"
+                    new_blocks.append(new_block)
             
         return new_blocks
     
@@ -157,7 +178,7 @@ def GenerateBlockArchitectureList():
     possible_blocks = possible_blocks + blocks_2
     
     possible_blocks = CheckBlockConsistency(possible_blocks)
-    # possible_blocks = ExpandConvs(possible_blocks)
+    possible_blocks = ExpandConvs(possible_blocks)
     
     
     for block in possible_blocks:
@@ -223,12 +244,12 @@ class Split(Layer):
         # Call the build function of the parent class to build this layer
         super(Split, self).build(input_shape)
         # Save the shape, use other functions
-        self.shape = input_shape
+        self.shape = input_shape[0]
 
     def call(self, x, mask=None):
         # Split x into two tensors
-        seq = [x[:, 0:self.shape[1] // 2, ...],
-               x[:, self.shape[1] // 2:, ...]]
+        seq = [x[0][:, 0:self.shape[1] // 2, ...],
+               x[0][:, self.shape[1] // 2:, ...]]
         return seq
 
     def compute_mask(self, inputs, input_mask=None):
@@ -241,7 +262,6 @@ class Split(Layer):
         shape1 = list(self.shape)
         shape0[1] = self.shape[1] // 2
         shape1[1] = self.shape[1] - self.shape[1] // 2
-        # print [shape0, shape1]
         return [shape0, shape1]
 
 class Block:
@@ -265,31 +285,40 @@ class Block:
         
         layers = []
     
+    def AddLayer(self, layer):
+        self.trainable_layers.append(layer)
+        return layer
+    
     def CreateEdge(self, x, layer):
         if (layer == 'No'):
             return 'No'
         elif(layer == 'Id'):
             return x
         else:
+            elements_list = layer.split("_")
+            
             #TODO: inverted residual convolution
             filters = self.n_filters
-            ratio = 4
-            strides = 1
-            return InvertedResidual(filters=filters, strides=strides, expansion_factor=ratio)(x)
-            # return self.bottleneck_block(x, filters*ratio, filters)
-            # return Conv2D(self.n_filters, (3, 3), activation='relu', padding='same')(x)
-    
+            ratio = int(elements_list[1])
+            strides = int(elements_list[2])
+            
+            if (elements_list[0] == 'Short'):
+                x = self.AddLayer(Conv2D(filters, (3, 3), strides=strides, padding='same', use_bias=False))(x)
+                x = self.AddLayer(BatchNormalization())(x)
+                return x
+            
+            elif (elements_list[0] == 'Conv'):
+                return self.AddLayer(InvertedResidual(filters=filters, strides=strides, expansion_factor=ratio))(x)
+            
     def CreateVertex(self, x, layer):
-        print(x)
         if (len(x) > 1 and isinstance(x[1], str) and x[1] == 'No'):
             x.pop(1)
         if (len(x) > 2 and isinstance(x[2], str) and x[2] == 'No'):
             x.pop(2)
         
-        if (layer == 'None' or len(x) == 1):
+        if (layer == 'None' or (layer == 'Add' and len(x) == 1)):
             return x[0]
         elif(layer == 'Split'):
-            #TODO
             return Split()(x)
         elif(layer == 'Concat'):
             return Concatenate(axis=1)(x)
@@ -300,6 +329,8 @@ class Block:
                 return x[0]
     
     def __call__(self, inputs):
+        self.trainable_layers = []
+        
         x_I_1 = self.CreateEdge(inputs, self.edge_I_1)
         
         x_v1 = self.CreateVertex([x_I_1], self.vertex1)
@@ -330,6 +361,10 @@ class Block:
         x_3_O = self.CreateEdge(x_v3, self.edge_3_O)
         
         return x_3_O
+    
+    def SetTrainable(self, trainable):
+        for layer in self.trainable_layers:
+            layer.trainable = trainable
         
     
     
@@ -346,20 +381,34 @@ class FPANet:
     
     def Generate(self):
         self.input = Input(shape=self.input_shape)
+        self.blocks = []
         
         # block_code = ['Add', 'Id', 'Add', 'Id', 'No', 'Id', 'None', 'Id', 'No', 'No', 'Conv_8_2_5']
         block_code = ['Add', 'Id', 'Add', 'Conv_8_2_5', 'No', 'Id', 'None', 'Id', 'No', 'No', 'Id']
-        block_code = ['Split', 'Conv', 'Concat', 'Id', 'Id', 'No', 'None', 'Id', 'No', 'No', 'Id']
+        block_code = ['Split', 'Id', 'Concat', 'Conv_8_2', 'Short_8_2', 'No', 'None', 'Id', 'No', 'No', 'Id']
+        block_code = ['Split', 'Id', 'Concat', 'Conv_8_1', 'Short_8_1', 'No', 'None', 'Id', 'No', 'No', 'Short_8_2']
         x = self.input
         for n_filters in self.block_filters:
-            x = Block(block_code, n_filters)(x)
-            
+            self.blocks.append(Block(block_code, n_filters))
+            # x = self.blocks[-1](x)
+            # self.blocks[-1].SetTrainable(False)
+        
+        
+        
         x = Flatten()(x)
         self.output = Dense(self.output_shape, activation='softmax') (x)
         
         self.model = Model(inputs = self.input, outputs = self.output)
         
         print(self.model.summary())
+    
+    def Ensamble(self):
+        x = self.input
+        for block in self.blocks:
+            x = block(x)
+        
+        x = self.output(x)
+        
     
     def Compile(self):
         loss = keras.losses.categorical_crossentropy
@@ -408,10 +457,10 @@ def main():
     
     # GenerateBlockArchitectureList()
     
-    model = FPANet(input_shape=input_shape, output_shape=output_shape, block_size=[24, 24])
+    model = FPANet(input_shape=input_shape, output_shape=output_shape, block_size=[24,40, 40])
     model.Generate()
     model.Compile()
-    # model.Train(X_train, y_train, X_test, y_test)
+    model.Train(X_train, y_train, X_test, y_test)
 
 if __name__ == '__main__':
   main()
