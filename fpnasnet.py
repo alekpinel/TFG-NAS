@@ -86,21 +86,30 @@ def GenerateBlockArchitectureList():
     def CheckBlockConsistency(all_blocks):
         new_blocks = []
         for block in all_blocks:
+            #A block must have a conv
             if ('Conv' not in block):
                 continue
+            
+            #If there is a split, there must be a concat
             if ('Split' in block and 'Concat' not in block):
                 continue
-            
-            if (block[1] == 'No' or block[-1] == 'No'):
+            #Must be input and output
+            if (block[1] == 'No' or block[10] == 'No'):
                 continue
-            
+            # There must be only 2 input per node
             if (not (CheckNodeConsistency(block[2:6]) and CheckNodeConsistency(block[6:10]))):
                 continue
             
-            if (block[2] == 'Concat' and block[4] == 'No'):
+            #No concat with split+input
+            if (block[0] == 'Split' and block[5] != 'No'):
                 continue
             
-            if (block[6] == 'Concat' and block[8] == 'No'):
+            #No concat with split+input
+            if (block[0] == 'Split' and block[6]== 'Concat' and block[9] != 'No'):
+                continue
+            
+            #No concat with split+input
+            if (block[0] == 'Split' and block[2]== 'Concat' and block[8] != 'No'):
                 continue
             
             if (block[4] == 'Conv'):
@@ -111,24 +120,7 @@ def GenerateBlockArchitectureList():
             
             if (block[8] == 'Conv' or block[9] == 'Conv'):
                 continue
-            
-            # Add shortcouts next to convolutions after the split
-            if (block[3] == 'Conv'):
-                if (block[4] == 'Id'):
-                    block[4] = 'Short'
-                if (block[5] == 'Id'):
-                    block[5] = 'Short'
-            if (block[4] == 'Conv' or block[5]=='Conv'):
-                block[3] = 'Short'
-                
-            if (block[7] == 'Conv'):
-                if (block[8] == 'Id'):
-                    block[8] = 'Short'
-                if (block[9] == 'Id'):
-                    block[9] = 'Short'
-            if (block[8] == 'Conv' or block[9]=='Conv'):
-                block[7] = 'Short'
-                          
+                   
             new_blocks.append(block)
         return new_blocks
     
@@ -181,9 +173,9 @@ def GenerateBlockArchitectureList():
     possible_blocks = ExpandConvs(possible_blocks)
     
     
-    for block in possible_blocks:
-        print(block)
-    print(f"N blocks: {len(possible_blocks)}")
+    # for block in possible_blocks:
+    #     print(block)
+    # print(f"N blocks: {len(possible_blocks)}")
     
     return possible_blocks
 
@@ -267,6 +259,7 @@ class Split(Layer):
 class Block:
     def __init__(self, block, n_filters):
         self.n_filters = n_filters
+        self.description = block
         
         self.vertex1 = block[0]
         self.edge_I_1 = block[1]
@@ -282,8 +275,6 @@ class Block:
         self.edge_I_3 = block[9]
         
         self.edge_3_O = block[10]
-        
-        layers = []
     
     def AddLayer(self, layer):
         self.trainable_layers.append(layer)
@@ -297,19 +288,53 @@ class Block:
         else:
             elements_list = layer.split("_")
             
-            #TODO: inverted residual convolution
             filters = self.n_filters
             ratio = int(elements_list[1])
             strides = int(elements_list[2])
+            return self.AddLayer(InvertedResidual(filters=filters, strides=strides, expansion_factor=ratio))(x)
+
             
-            if (elements_list[0] == 'Short'):
-                x = self.AddLayer(Conv2D(filters, (3, 3), strides=strides, padding='same', use_bias=False))(x)
-                x = self.AddLayer(BatchNormalization())(x)
-                return x
+            # if (elements_list[0] == 'Short'):
+            #     x = self.AddLayer(Conv2D(filters, (3, 3), strides=strides, padding='same', use_bias=False))(x)
+            #     x = self.AddLayer(BatchNormalization())(x)
+            #     return x
             
-            elif (elements_list[0] == 'Conv'):
-                return self.AddLayer(InvertedResidual(filters=filters, strides=strides, expansion_factor=ratio))(x)
+            # elif (elements_list[0] == 'Conv'):
+                # return self.AddLayer(InvertedResidual(filters=filters, strides=strides, expansion_factor=ratio))(x)
+    
+    def CreateShortcoutIfNecessary(self, x):
+        # print(x[0].shape)
+        # print(x[1].shape)
+        if (x[0].shape[1:] == x[1].shape[1:]):
+            return x
+        else:
+            #Calculate the strides
+            shortcout = -1
+            strides = 1
+            if (x[0].shape[1] < x[1].shape[1]):
+                shortcout = 1
+                strides = (x[1].shape[1] // x[0].shape[1], x[1].shape[2] // x[0].shape[2])
+            elif (x[1].shape[1] < x[0].shape[1]):
+                shortcout = 0
+                strides = (x[0].shape[1] // x[1].shape[1], x[0].shape[2] // x[1].shape[2])
             
+            #Calculate the filters
+            if (x[0].shape[3] == x[1].shape[3]):
+                filters = x[0].shape[3]
+            elif (x[0].shape[3] == self.n_filters):
+                shortcout = 1
+                filters = self.n_filters
+            elif (x[1].shape[3] == self.n_filters):
+                shortcout = 0
+                filters = self.n_filters
+            
+            # print(f"shortcout {shortcout} strides: {strides} filters: {filters}")
+            x[shortcout] = self.AddLayer(Conv2D(filters, (3, 3), strides=strides, padding='same', use_bias=False))(x[shortcout])
+            x[shortcout] = self.AddLayer(BatchNormalization())(x[shortcout])
+            
+            return x
+            
+    
     def CreateVertex(self, x, layer):
         if (len(x) > 1 and isinstance(x[1], str) and x[1] == 'No'):
             x.pop(1)
@@ -321,12 +346,11 @@ class Block:
         elif(layer == 'Split'):
             return Split()(x)
         elif(layer == 'Concat'):
+            x = self.CreateShortcoutIfNecessary(x)
             return Concatenate(axis=1)(x)
         elif(layer == 'Add'):
-            if x[0].shape[1:] == x[1].shape[1:]:
-                return Add()(x)
-            else:
-                return x[0]
+            x = self.CreateShortcoutIfNecessary(x)
+            return Add()(x)
     
     def __call__(self, inputs):
         self.trainable_layers = []
@@ -382,6 +406,9 @@ class FPANet:
         
         self.GenerateInitialState()
     
+    def SetParameters(self, X_train, Y_train, X_val, Y_val):
+        self.data = [X_train, Y_train, X_val, Y_val]
+    
     def GenerateInitialState(self):
         self.input = Input(shape=self.input_shape)
         self.blocks = []
@@ -394,25 +421,73 @@ class FPANet:
         x = self.input
         for n_filters in self.block_filters:
             self.blocks.append(Block(self.block_architectures[np.random.randint(0, len(self.block_architectures))], n_filters))
-            # x = self.blocks[-1](x)
-            # self.blocks[-1].SetTrainable(False)
         
         # x = Flatten()(x)
         self.output = Dense(self.output_shape, activation='softmax')
         
-        # self.model = Model(inputs = self.input, outputs = self.output)
-        
-        self.Ensamble()
+        self.Ensamble(verbose=0)
         
         print(self.model.summary())
     
-    def Ensamble(self):
+    def Ensamble(self, trainable = True, verbose=0):
         x = self.input
         for block in self.blocks:
+            if (verbose):
+                print(block.description)
             x = block(x)
+            block.SetTrainable(trainable)
+            
         x = Flatten()(x)
+        self.output = Dense(self.output_shape, activation='softmax')
         x = self.output(x)
+        self.output.trainable = trainable
+        # x = Dense(self.output_shape, activation='softmax')(x)
         self.model = Model(inputs = self.input, outputs = x)
+    
+    def OptimizeBlock(self, block_index, epochs=2, n_best_models = 3, best_epochs = 4, batch_size=32, verbose=0):
+        results = []
+        all_blocks = []
+        for block_architecture in self.block_architectures[:5]:
+            all_blocks.append(Block(block_architecture, self.block_filters[block_index]))
+            self.blocks[block_index] = all_blocks[-1]
+            
+            if verbose:
+                print(all_blocks[-1].description)
+            
+            #Ensamble with all blocks frozen except one
+            self.Ensamble(False, verbose=0)
+            self.blocks[block_index].SetTrainable(True)
+            # if verbose:
+            #     print(self.model.summary())
+            self.Compile()
+            res = self.Train(self.data[0], self.data[1], self.data[2], self.data[3], epochs=epochs, batch_size=batch_size)
+            results.append(res.history['val_loss'][-1])
+        
+        selected_index = sorted(range(len(results)),key=results.__getitem__)[:n_best_models]
+        print(f"Selected models: {selected_index}")
+        print(f"{results[selected_index]}")
+        
+        best_result = 100000
+        best_block = None
+        for index in selected_index:
+            self.blocks[block_index] = all_blocks[index]
+            
+            if verbose:
+                print(all_blocks[index].description)
+            
+            #Ensamble with all block unfrozen
+            self.Ensamble(True, verbose)
+            self.Compile()
+            res = self.Train(self.data[0], self.data[1], self.data[2], self.data[3], epochs=best_epochs, batch_size=batch_size)
+            result = res.history['val_loss'][-1]
+            if (result < best_result):
+                best_result = result
+                best_block = self.blocks[block_index]
+        
+        print(f"Best block {block_index}: {best_block.description}")
+        self.blocks[block_index] = best_block
+        
+            
     
     def ChangeBlock(self, block_index):
         block_code = ['Add', 'Id', 'Add', 'Conv_8_2_5', 'No', 'Id', 'None', 'Id', 'No', 'No', 'Id']
@@ -457,6 +532,7 @@ def GetData():
 
 def main():
     print("MAIN")
+    np.random.seed(1)
     (X_train, y_train), (X_test, y_test) = GetData()
     input_shape = X_train.shape[1:]
     output_shape = y_train.shape[1]
@@ -466,13 +542,14 @@ def main():
     # GenerateBlockArchitectureList()
     
     model = FPANet(input_shape=input_shape, output_shape=output_shape, block_size=[24,40, 40])
-    # model.Generate()
-    model.Compile()
-    model.Train(X_train, y_train, X_test, y_test)
-    model.ChangeBlock(0)
-    model.Ensamble()
-    model.Compile()
-    model.Train(X_train, y_train, X_test, y_test)
+    model.SetParameters(X_train, y_train, X_test, y_test)
+    model.OptimizeBlock(0, verbose=1)
+    # model.Compile()
+    # model.Train(X_train, y_train, X_test, y_test)
+    # model.ChangeBlock(0)
+    # model.Ensamble()
+    # model.Compile()
+    # model.Train(X_train, y_train, X_test, y_test)
 
 if __name__ == '__main__':
   main()
