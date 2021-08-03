@@ -18,6 +18,7 @@ from keras.layers import Conv2D, MaxPooling2D, Activation, Add, Concatenate, Bat
 from keras.optimizers import SGD
 import tensorflow as tf
 from tensorflow.keras.layers import Layer, Conv2D, DepthwiseConv2D, BatchNormalization
+from data_reading_visualization import SummaryString
 
 from keras.datasets import mnist, cifar10
 from keras.utils import np_utils
@@ -505,14 +506,18 @@ class FPANet:
                 self.OptimizeBlock(block_index, epochs=P, n_best_models=E, best_epochs=Q, verbose=1)
                 WriteFile("fpnas_log", f"Block {block_index} {self.blocks[block_index].description}\n")
         
-        WriteFile("fpnas_log", f"Final Model \n{self.model.summary()}\n")
+        WriteFile("fpnas_log", f"Final Model \n{SummaryString(self.model)}\n")
     
     def Compile(self):
-        loss = keras.losses.categorical_crossentropy
-        
-        self.model.compile(optimizer='adam',
-                      loss=loss,
-                      metrics=['accuracy'])
+        if (self.output_shape > 1):
+            loss = keras.losses.categorical_crossentropy
+            self.model.compile(optimizer='adam',
+                          loss=loss,
+                          metrics=['accuracy'])
+        else:
+            self.model.compile(loss=keras.losses.binary_crossentropy,
+              optimizer=keras.optimizers.Adam(),
+              metrics=['accuracy'])
         
     def Train(self, X_train, Y_train, X_val, Y_val, epochs=2, batch_size=128):
         return self.model.fit(X_train, Y_train,
