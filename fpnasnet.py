@@ -10,6 +10,7 @@ import cv2
 import numpy as np
 import keras
 import matplotlib.pyplot as plt
+from random import sample
 
 from keras.models import Sequential, Model
 from keras.layers import Input, Dense, Dropout, Flatten, ReLU, Lambda
@@ -20,6 +21,14 @@ from tensorflow.keras.layers import Layer, Conv2D, DepthwiseConv2D, BatchNormali
 
 from keras.datasets import mnist, cifar10
 from keras.utils import np_utils
+
+#Write something to file
+def WriteFile(file_name, string, mode='a'):
+    mainpath = "./"
+    resultpath = mainpath + "ouput/"
+    f = open(resultpath + file_name + ".txt", mode)
+    f.write(string)
+    f.close()
 
 #This function generates all the possible block architectures
 def GenerateBlockArchitectureList():
@@ -413,20 +422,14 @@ class FPANet:
         self.input = Input(shape=self.input_shape)
         self.blocks = []
         
-        # block_code = ['Add', 'Id', 'Add', 'Id', 'No', 'Id', 'None', 'Id', 'No', 'No', 'Conv_8_2_5']
-        # block_code = ['Add', 'Id', 'Add', 'Conv_8_2_5', 'No', 'Id', 'None', 'Id', 'No', 'No', 'Id']
-        # block_code = ['Split', 'Id', 'Concat', 'Conv_8_2', 'Short_8_2', 'No', 'None', 'Id', 'No', 'No', 'Id']
-        # block_code = ['Split', 'Id', 'Concat', 'Conv_8_1', 'Short_8_1', 'No', 'None', 'Id', 'No', 'No', 'Short_8_2']
-        
-        x = self.input
         for n_filters in self.block_filters:
             self.blocks.append(Block(self.block_architectures[np.random.randint(0, len(self.block_architectures))], n_filters))
         
-        # x = Flatten()(x)
         self.output = Dense(self.output_shape, activation='softmax')
         
         self.Ensamble(verbose=0)
         
+        print("Initial State")
         print(self.model.summary())
     
     def Ensamble(self, trainable = True, verbose=0):
@@ -445,9 +448,11 @@ class FPANet:
         self.model = Model(inputs = self.input, outputs = x)
     
     def OptimizeBlock(self, block_index, epochs=2, n_best_models = 3, best_epochs = 4, batch_size=32, verbose=0):
+        if verbose:
+            print(f"\n\nOPTIMIZING BLOCK {block_index}\n") 
         results = []
         all_blocks = []
-        for block_architecture in self.block_architectures[:5]:
+        for block_architecture in self.block_architectures:
             all_blocks.append(Block(block_architecture, self.block_filters[block_index]))
             self.blocks[block_index] = all_blocks[-1]
             
@@ -464,8 +469,8 @@ class FPANet:
             results.append(res.history['val_loss'][-1])
         
         selected_index = sorted(range(len(results)),key=results.__getitem__)[:n_best_models]
-        print(f"Selected models: {selected_index}")
-        print(f"{results[selected_index]}")
+        if verbose:
+            print(f"Selected models: {selected_index}") 
         
         best_result = 100000
         best_block = None
@@ -486,12 +491,21 @@ class FPANet:
         
         print(f"Best block {block_index}: {best_block.description}")
         self.blocks[block_index] = best_block
+        return best_block
         
-            
-    
-    def ChangeBlock(self, block_index):
-        block_code = ['Add', 'Id', 'Add', 'Conv_8_2_5', 'No', 'Id', 'None', 'Id', 'No', 'No', 'Id']
-        self.blocks[block_index] = Block(block_code, self.block_filters[block_index])
+    def OptimizeArchitecture(self, P=4, Q=4, E=10, T=1, DEBUG=None):
+        if (DEBUG is not None):
+            self.block_architectures = sample(self.block_architectures, DEBUG)
+        
+        
+        WriteFile("fpnas_log", "FPNAS Optimizing Architecture\n")
+        
+        for i in range(T):
+            for block_index in range(len(self.block_filters)):
+                self.OptimizeBlock(block_index, epochs=P, n_best_models=E, best_epochs=Q, verbose=1)
+                WriteFile("fpnas_log", f"Block {block_index} {self.blocks[block_index].description}\n")
+        
+        WriteFile("fpnas_log", f"Final Model \n{self.model.summary()}\n")
     
     def Compile(self):
         loss = keras.losses.categorical_crossentropy
@@ -543,7 +557,13 @@ def main():
     
     model = FPANet(input_shape=input_shape, output_shape=output_shape, block_size=[24,40, 40])
     model.SetParameters(X_train, y_train, X_test, y_test)
-    model.OptimizeBlock(0, verbose=1)
+    
+    D=5
+    P=2
+    Q=4
+    E=3
+    T=1
+    model.OptimizeArchitecture(P=P, Q=Q, E=E, T=T, DEBUG=D)
     # model.Compile()
     # model.Train(X_train, y_train, X_test, y_test)
     # model.ChangeBlock(0)
