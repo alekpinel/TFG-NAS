@@ -576,6 +576,7 @@ def fpnasModel(X, Y, validation_split=0.15, P=2, Q=4, E=3, T=1, D=None, blocks_s
     
     # model.OptimizeBlock(0, epochs=P, n_best_models=E, best_epochs=Q, verbose=1, batch_size=1)
     
+    return model.model
 
 def GetCIFARData():
     (X_train, y_train), (X_test, y_test) = cifar10.load_data()

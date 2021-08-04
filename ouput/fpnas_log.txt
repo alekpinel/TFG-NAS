@@ -30,3 +30,6 @@ FPNAS Optimizing Architecture
 FPNAS Optimizing Architecture
 FPNAS Optimizing Architecture
 FPNAS Optimizing Architecture
+Block 0 ['Split', 'Id', 'Concat', 'Conv_4_2', 'Id', 'No', 'Add', 'Id', 'No', 'Id', 'Id']
+Block 1 ['Split', 'Conv_8_1', 'Concat', 'Id', 'Id', 'No', 'None', 'Id', 'No', 'No', 'Id']
+Block 2 ['Split', 'Id', 'Add', 'Conv_6_2', 'Id', 'No', 'Concat', 'Id', 'Id', 'No', 'Id']
