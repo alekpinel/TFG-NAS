@@ -15,6 +15,8 @@ from sklearn.metrics import plot_confusion_matrix, balanced_accuracy_score
 from tensorflow.keras.utils import to_categorical
 from sklearn.preprocessing import LabelEncoder
 import seaborn as sns
+from keras.utils import plot_model
+
 
 mainpath = "./" #Local
 #mainpath = "/content/drive/My Drive/Colab Notebooks/TFG/" #Colab
@@ -166,6 +168,10 @@ def createConfusionMatrix(cm,name_clf, tipo_de_clas=0, save=True):
     
     if (save):
         resultpath = mainpath + "results/"
-        plt.savefig(resultpath + name_clf + ".png",  bbox_inches = 'tight')
+        plt.savefig(resultpath + name_clf + "_cm.png",  bbox_inches = 'tight')
     plt.show()
     plt.close()
+    
+def PlotModelToFile(model, model_name):
+    plotpath = mainpath + "results/" + model_name + "_plot.png"
+    plot_model(model, plotpath)

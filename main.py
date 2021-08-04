@@ -16,9 +16,10 @@ import statistics
 from sklearn import metrics
 from keras.models import clone_model
 
-from data_reading_visualization import ReadData, CalculateAccuracy, extraerSP_SS, ResultsToFile, createConfusionMatrix, convertToBinary, SummaryString
+from data_reading_visualization import ReadData, CalculateAccuracy, extraerSP_SS, ResultsToFile, createConfusionMatrix, convertToBinary, SummaryString, PlotModelToFile
 from original_nn import OriginalNN 
 from autokeras_model import autokerasModel
+from fpnasnet import fpnasModel
 
 def Compile(model):
     model.compile(loss=keras.losses.binary_crossentropy,
@@ -47,12 +48,15 @@ def NASExperiment(X, Y, model_name, NAS_function, NAS_parameters, test_percent=0
     seconds = end_time - start_time
     searching_time = seconds
     
-    if (verbose>=1):
+    if (verbose):
         print(f"{model_name}:")
         print(SummaryString(NAS_model))
         
     result_s = f"{model_name}:"
     result_s += SummaryString(NAS_model)
+    
+    # if (save_results):
+    #     PlotModelToFile(NAS_model, model_name)
     
     # With the final model, apply leave one out
     cm, fit_time = leaveOneOut(X_train, X_test, Y_train, Y_test, NAS_model, epochs=epochs, batch_size=batch_size, verbose=1)
@@ -141,7 +145,10 @@ def main():
     # NASExperiment(X, Y, "OriginalNN", OriginalNN, originalNN_parameters)
     
     autokeras_parameters = {'validation_split':0.15, 'epochs':50, 'max_trials':20}
-    NASExperiment(X, Y, "Autokeras", autokerasModel, autokeras_parameters)
+    # NASExperiment(X, Y, "Autokeras", autokerasModel, autokeras_parameters)
+    
+    fpnas_parameters = {'validation_split':0.15, 'P':4, 'Q':4, 'E':10, 'T':1, 'batch_size':8}
+    NASExperiment(X, Y, "Autokeras", fpnasModel, fpnas_parameters)
 
 if __name__ == '__main__':
   main()

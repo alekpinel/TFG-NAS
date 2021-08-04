@@ -18,10 +18,11 @@ from keras.layers import Conv2D, MaxPooling2D, Activation, Add, Concatenate, Bat
 from keras.optimizers import SGD
 import tensorflow as tf
 from tensorflow.keras.layers import Layer, Conv2D, DepthwiseConv2D, BatchNormalization
-from data_reading_visualization import SummaryString
+from data_reading_visualization import SummaryString, ReadData, convertToBinary
 
 from keras.datasets import mnist, cifar10
 from keras.utils import np_utils
+from sklearn.model_selection import train_test_split
 
 #Write something to file
 def WriteFile(file_name, string, mode='a'):
@@ -442,9 +443,15 @@ class FPANet:
             block.SetTrainable(trainable)
             
         x = Flatten()(x)
-        self.output = Dense(self.output_shape, activation='softmax')
+        
+        if (self.output_shape > 1):
+            last_activation = 'softmax'
+        else:
+            last_activation = 'sigmoid'
+        
+        self.output = Dense(self.output_shape, activation=last_activation)
         x = self.output(x)
-        self.output.trainable = trainable
+        # self.output.trainable = trainable
         # x = Dense(self.output_shape, activation='softmax')(x)
         self.model = Model(inputs = self.input, outputs = x)
     
@@ -453,21 +460,27 @@ class FPANet:
             print(f"\n\nOPTIMIZING BLOCK {block_index}\n") 
         results = []
         all_blocks = []
+        i = 0
         for block_architecture in self.block_architectures:
             all_blocks.append(Block(block_architecture, self.block_filters[block_index]))
             self.blocks[block_index] = all_blocks[-1]
             
             if verbose:
+                print(f"Block Architecture {i}/{len(self.block_architectures)}")
                 print(all_blocks[-1].description)
             
             #Ensamble with all blocks frozen except one
             self.Ensamble(False, verbose=0)
             self.blocks[block_index].SetTrainable(True)
+            
             # if verbose:
             #     print(self.model.summary())
+                
             self.Compile()
             res = self.Train(self.data[0], self.data[1], self.data[2], self.data[3], epochs=epochs, batch_size=batch_size)
             results.append(res.history['val_loss'][-1])
+            
+            i+=1
         
         selected_index = sorted(range(len(results)),key=results.__getitem__)[:n_best_models]
         if verbose:
@@ -491,10 +504,12 @@ class FPANet:
                 best_block = self.blocks[block_index]
         
         print(f"Best block {block_index}: {best_block.description}")
+        print(f"{SummaryString(self.model)}")
+        
         self.blocks[block_index] = best_block
         return best_block
         
-    def OptimizeArchitecture(self, P=4, Q=4, E=10, T=1, DEBUG=None):
+    def OptimizeArchitecture(self, P=4, Q=4, E=10, T=1, DEBUG=None, batch_size=32):
         if (DEBUG is not None):
             self.block_architectures = sample(self.block_architectures, DEBUG)
         
@@ -503,7 +518,7 @@ class FPANet:
         
         for i in range(T):
             for block_index in range(len(self.block_filters)):
-                self.OptimizeBlock(block_index, epochs=P, n_best_models=E, best_epochs=Q, verbose=1)
+                self.OptimizeBlock(block_index, epochs=P, n_best_models=E, best_epochs=Q, verbose=1, batch_size=batch_size)
                 WriteFile("fpnas_log", f"Block {block_index} {self.blocks[block_index].description}\n")
         
         WriteFile("fpnas_log", f"Final Model \n{SummaryString(self.model)}\n")
@@ -515,7 +530,8 @@ class FPANet:
                           loss=loss,
                           metrics=['accuracy'])
         else:
-            self.model.compile(loss=keras.losses.binary_crossentropy,
+            loss = keras.losses.binary_crossentropy
+            self.model.compile(loss=loss,
               optimizer=keras.optimizers.Adam(),
               metrics=['accuracy'])
         
@@ -531,8 +547,37 @@ class FPANet:
         results = self.model.predict(X_test)
         return results
 
+def fpnasModel(X, Y, validation_split=0.15, P=2, Q=4, E=3, T=1, D=None, blocks_size=None, batch_size=1):
+    X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=validation_split, stratify=Y)
+    input_shape = X_train.shape[1:]
+    if (len(y_train.shape)>1):
+        output_shape = y_train.shape[1]
+    else:
+        output_shape = 1
+    
+    if (blocks_size == None):
+        # blocks_size = [24,40, 40]
+        blocks_size = [24, 24,40,40,128,128]
+    
+    print(f"Train: {X_train.shape}")
+    print(f"Test: {X_test.shape}")
+    
+    model = FPANet(input_shape=input_shape, output_shape=output_shape, block_size=blocks_size)
+    model.SetParameters(X_train, y_train, X_test, y_test)
+    
+    # model.Compile()
+    # model.model.summary()
+    # model.Train(X_train, y_train, X_test, y_test, epochs=4, batch_size=8)
+    # predictions = model.Predict(X_train)
+    # print(predictions)
+    # print(y_test)
+    
+    model.OptimizeArchitecture(P=P, Q=Q, E=E, T=T, DEBUG=D, batch_size=1)
+    
+    # model.OptimizeBlock(0, epochs=P, n_best_models=E, best_epochs=Q, verbose=1, batch_size=1)
+    
 
-def GetData():
+def GetCIFARData():
     (X_train, y_train), (X_test, y_test) = cifar10.load_data()
     
     # Normalize the images.
@@ -552,7 +597,21 @@ def GetData():
 def main():
     print("MAIN")
     np.random.seed(1)
-    (X_train, y_train), (X_test, y_test) = GetData()
+    
+    X, Y = ReadData(light='WL')
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3, stratify=Y)
+    Y_train = convertToBinary(Y_train)
+    Y_test = convertToBinary(Y_test)
+    
+    
+    
+    fpnasModel(X_train, Y_train, validation_split=0.15, P=2, Q=4, E=3, T=1, batch_size=8)
+    
+    return 0
+    
+    
+    
+    (X_train, y_train), (X_test, y_test) = GetCIFARData()
     input_shape = X_train.shape[1:]
     output_shape = y_train.shape[1]
     
@@ -568,13 +627,14 @@ def main():
     Q=4
     E=3
     T=1
-    model.OptimizeArchitecture(P=P, Q=Q, E=E, T=T, DEBUG=D)
-    # model.Compile()
-    # model.Train(X_train, y_train, X_test, y_test)
-    # model.ChangeBlock(0)
-    # model.Ensamble()
-    # model.Compile()
-    # model.Train(X_train, y_train, X_test, y_test)
+    fpnasModel(X_train, y_train, validation_split=0.15, P=P, Q=Q, E=E, T=T, batch_size=32)
+    # model.OptimizeArchitecture(P=P, Q=Q, E=E, T=T, DEBUG=D)
+    
+    return 0
+    
+    
+    
+
 
 if __name__ == '__main__':
   main()

@@ -4,3 +4,29 @@ Block 1 ['Add', 'Id', 'Add', 'Id', 'No', 'Id', 'Add', 'Id', 'No', 'Id', 'Conv_8_
 Block 2 ['Add', 'Id', 'Add', 'Id', 'No', 'Id', 'Add', 'Id', 'No', 'Id', 'Conv_8_2']
 Final Model 
 None
+FPNAS Optimizing Architecture
+Block 0 ['Split', 'Conv_8_1', 'Concat', 'Id', 'Id', 'No', 'None', 'Id', 'No', 'No', 'Id']
+FPNAS Optimizing Architecture
+Block 0 ['Split', 'Id', 'Add', 'Id', 'Id', 'No', 'Concat', 'Id', 'Id', 'No', 'Conv_8_1']
+FPNAS Optimizing Architecture
+FPNAS Optimizing Architecture
+FPNAS Optimizing Architecture
+FPNAS Optimizing Architecture
+Block 0 ['Split', 'Id', 'Concat', 'Conv_6_2', 'Id', 'No', 'None', 'Id', 'No', 'No', 'Id']
+Block 1 ['Add', 'Id', 'Add', 'Conv_6_2', 'No', 'Id', 'Add', 'Id', 'No', 'Id', 'Id']
+FPNAS Optimizing Architecture
+FPNAS Optimizing Architecture
+Block 0 ['Split', 'Id', 'Concat', 'Conv_8_1', 'Id', 'No', 'Add', 'Id', 'No', 'Id', 'Id']
+FPNAS Optimizing Architecture
+Block 0 ['Split', 'Id', 'Add', 'Id', 'Id', 'No', 'Concat', 'Id', 'Id', 'No', 'Conv_4_1']
+FPNAS Optimizing Architecture
+FPNAS Optimizing Architecture
+FPNAS Optimizing Architecture
+FPNAS Optimizing Architecture
+FPNAS Optimizing Architecture
+FPNAS Optimizing Architecture
+FPNAS Optimizing Architecture
+FPNAS Optimizing Architecture
+FPNAS Optimizing Architecture
+FPNAS Optimizing Architecture
+FPNAS Optimizing Architecture
