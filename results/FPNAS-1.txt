@@ -1,106 +1,4 @@
-FPNAS Optimizing ArchitectureBlock 0 ['Split', 'Id', 'Concat', 'Conv_8_1', 'Id', 'No', 'Add', 'Id', 'No', 'Id', 'Id']FPNAS Optimizing Architecture
-Block 0 ['Split', 'Id', 'Concat', 'Conv_8_2', 'Id', 'No', 'Add', 'Id', 'No', 'Id', 'Id']
-Block 1 ['Add', 'Id', 'Add', 'Id', 'No', 'Id', 'Add', 'Id', 'No', 'Id', 'Conv_8_2']
-Block 2 ['Add', 'Id', 'Add', 'Id', 'No', 'Id', 'Add', 'Id', 'No', 'Id', 'Conv_8_2']
-Final Model 
-None
-FPNAS Optimizing Architecture
-Block 0 ['Split', 'Conv_8_1', 'Concat', 'Id', 'Id', 'No', 'None', 'Id', 'No', 'No', 'Id']
-FPNAS Optimizing Architecture
-Block 0 ['Split', 'Id', 'Add', 'Id', 'Id', 'No', 'Concat', 'Id', 'Id', 'No', 'Conv_8_1']
-FPNAS Optimizing Architecture
-FPNAS Optimizing Architecture
-FPNAS Optimizing Architecture
-FPNAS Optimizing Architecture
-Block 0 ['Split', 'Id', 'Concat', 'Conv_6_2', 'Id', 'No', 'None', 'Id', 'No', 'No', 'Id']
-Block 1 ['Add', 'Id', 'Add', 'Conv_6_2', 'No', 'Id', 'Add', 'Id', 'No', 'Id', 'Id']
-FPNAS Optimizing Architecture
-FPNAS Optimizing Architecture
-Block 0 ['Split', 'Id', 'Concat', 'Conv_8_1', 'Id', 'No', 'Add', 'Id', 'No', 'Id', 'Id']
-FPNAS Optimizing Architecture
-Block 0 ['Split', 'Id', 'Add', 'Id', 'Id', 'No', 'Concat', 'Id', 'Id', 'No', 'Conv_4_1']
-FPNAS Optimizing Architecture
-FPNAS Optimizing Architecture
-FPNAS Optimizing Architecture
-FPNAS Optimizing Architecture
-FPNAS Optimizing Architecture
-FPNAS Optimizing Architecture
-FPNAS Optimizing Architecture
-FPNAS Optimizing Architecture
-FPNAS Optimizing Architecture
-FPNAS Optimizing Architecture
-FPNAS Optimizing Architecture
-Block 0 ['Split', 'Id', 'Concat', 'Conv_4_2', 'Id', 'No', 'Add', 'Id', 'No', 'Id', 'Id']
-Block 1 ['Split', 'Conv_8_1', 'Concat', 'Id', 'Id', 'No', 'None', 'Id', 'No', 'No', 'Id']
-Block 2 ['Split', 'Id', 'Add', 'Conv_6_2', 'Id', 'No', 'Concat', 'Id', 'Id', 'No', 'Id']
-FPNAS Optimizing Architecture
-Block 0 ['Split', 'Id', 'Add', 'Conv_6_2', 'Id', 'No', 'Concat', 'Id', 'Id', 'No', 'Id']
-Final Model 
-Model: "functional_215"
-__________________________________________________________________________________________________
-Layer (type)                    Output Shape         Param #     Connected to                     
-==================================================================================================
-input_1 (InputLayer)            [(None, 224, 224, 3) 0                                            
-__________________________________________________________________________________________________
-split_66 (Split)                [(None, 112, 224, 3) 0           input_1[0][0]                    
-__________________________________________________________________________________________________
-conv2d_101 (Conv2D)             (None, 56, 112, 24)  648         split_66[0][1]                   
-__________________________________________________________________________________________________
-inverted_residual_107 (Inverted (None, 56, 112, 24)  888         split_66[0][0]                   
-__________________________________________________________________________________________________
-batch_normalization_101 (BatchN (None, 56, 112, 24)  96          conv2d_101[0][0]                 
-__________________________________________________________________________________________________
-conv2d_102 (Conv2D)             (None, 56, 112, 24)  648         split_66[0][1]                   
-__________________________________________________________________________________________________
-add_123 (Add)                   (None, 56, 112, 24)  0           inverted_residual_107[0][0]      
-                                                                 batch_normalization_101[0][0]    
-__________________________________________________________________________________________________
-batch_normalization_102 (BatchN (None, 56, 112, 24)  96          conv2d_102[0][0]                 
-__________________________________________________________________________________________________
-concatenate_66 (Concatenate)    (None, 112, 112, 24) 0           add_123[0][0]                    
-                                                                 batch_normalization_102[0][0]    
-__________________________________________________________________________________________________
-flatten_107 (Flatten)           (None, 301056)       0           concatenate_66[0][0]             
-__________________________________________________________________________________________________
-dense_108 (Dense)               (None, 1)            301057      flatten_107[0][0]                
-==================================================================================================
-Total params: 303,433
-Trainable params: 303,217
-Non-trainable params: 216
-__________________________________________________________________________________________________
-FPNAS Optimizing Architecture
-Block 0 ['Split', 'Conv_8_2', 'Concat', 'Id', 'Id', 'No', 'None', 'Id', 'No', 'No', 'Id']
-Final Model 
-Model: "functional_447"
-__________________________________________________________________________________________________
-Layer (type)                    Output Shape         Param #     Connected to                     
-==================================================================================================
-input_10 (InputLayer)           [(None, 224, 224, 3) 0                                            
-__________________________________________________________________________________________________
-inverted_residual_228 (Inverted (None, 112, 112, 24) 1152        input_10[0][0]                   
-__________________________________________________________________________________________________
-split_144 (Split)               [(None, 56, 112, 24) 0           inverted_residual_228[0][0]      
-__________________________________________________________________________________________________
-concatenate_144 (Concatenate)   (None, 112, 112, 24) 0           split_144[0][0]                  
-                                                                 split_144[0][1]                  
-__________________________________________________________________________________________________
-flatten_223 (Flatten)           (None, 301056)       0           concatenate_144[0][0]            
-__________________________________________________________________________________________________
-dense_233 (Dense)               (None, 1)            301057      flatten_223[0][0]                
-==================================================================================================
-Total params: 302,209
-Trainable params: 302,065
-Non-trainable params: 144
-__________________________________________________________________________________________________
-FPNAS Optimizing Architecture
-Block 0 ['Split', 'Id', 'Add', 'Conv_6_2', 'Id', 'No', 'Concat', 'Id', 'Id', 'No', 'Id']
-Block 1 ['Split', 'Id', 'Add', 'Id', 'Id', 'No', 'Concat', 'Id', 'Id', 'No', 'Conv_6_2']
-Block 2 ['Split', 'Conv_6_2', 'Concat', 'Id', 'Id', 'No', 'Add', 'Id', 'No', 'Id', 'Id']
-Block 3 ['Add', 'Id', 'Add', 'Id', 'No', 'Id', 'Add', 'Id', 'No', 'Id', 'Conv_6_1']
-Block 4 ['Split', 'Id', 'Concat', 'Conv_8_1', 'Id', 'No', 'Add', 'Id', 'No', 'Id', 'Id']
-Block 5 ['Split', 'Id', 'Add', 'Conv_4_2', 'Id', 'No', 'Concat', 'Id', 'Id', 'No', 'Id']
-Final Model 
-Model: "functional_1733"
+FPNAS:Model: "functional_1733"
 __________________________________________________________________________________________________
 Layer (type)                    Output Shape         Param #     Connected to                     
 ==================================================================================================
@@ -200,9 +98,11 @@ Total params: 832,617
 Trainable params: 823,201
 Non-trainable params: 9,416
 __________________________________________________________________________________________________
-FPNAS Optimizing Architecture
-Block 0 ['Split', 'Id', 'Concat', 'Conv_8_2', 'Id', 'No', 'None', 'Id', 'No', 'No', 'Id']
-Block 1 ['Split', 'Conv_8_2', 'Add', 'Id', 'Id', 'No', 'Concat', 'Id', 'Id', 'No', 'Id']
-Block 2 ['Add', 'Id', 'Add', 'Conv_6_1', 'No', 'Id', 'None', 'Id', 'No', 'No', 'Id']
-Block 3 ['Split', 'Id', 'Concat', 'Conv_8_2', 'Id', 'No', 'Add', 'Id', 'No', 'Id', 'Id']
-Block 4 ['Add', 'Id', 'Add', 'Id', 'No', 'Id', 'Add', 'Conv_8_2', 'No', 'Id', 'Id']
+RESULTS: 
+ACC:0.609 
+SP:0.400 
+SS:1.000 
+Pr:0.471 
+Score:0.640 
+Searching time:4092.331 
+Fitting time:25.031

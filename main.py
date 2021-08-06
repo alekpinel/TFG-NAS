@@ -20,11 +20,39 @@ from data_reading_visualization import ReadData, CalculateAccuracy, extraerSP_SS
 from original_nn import OriginalNN 
 from autokeras_model import autokerasModel
 from fpnasnet import fpnasModel
+import tensorflow as tf
 
 def Compile(model):
     model.compile(loss=keras.losses.binary_crossentropy,
               optimizer=keras.optimizers.Adam(),
               metrics=['accuracy'])
+
+def ClearWeights(model):
+    for layer in model.layers:
+        if isinstance(layer, tf.keras.Model): #if you're using a model as a layer
+            ClearWeights(layer) #apply function recursively
+            continue
+
+        #where are the initializers?
+        if hasattr(layer, 'cell'):
+            init_container = layer.cell
+        else:
+            init_container = layer
+
+        for key, initializer in init_container.__dict__.items():
+            if "initializer" not in key: #is this item an initializer?
+                  continue #if no, skip it
+
+            # find the corresponding variable, like the kernel or the bias
+            if key == 'recurrent_initializer': #special case check
+                var = getattr(init_container, 'recurrent_kernel')
+            else:
+                var = getattr(init_container, key.replace("_initializer", ""))
+
+            if var is not None:
+                var.assign(initializer(var.shape, var.dtype))
+            #use the initializer    
+    return model
 
 def NASExperiment(X, Y, model_name, NAS_function, NAS_parameters, test_percent=0.3, epochs=50, batch_size=32, verbose=1, save_results=True):
     
@@ -95,7 +123,8 @@ def leaveOneOut(X_train, X_test, Y_train, Y_test, original_model, epochs=50, bat
         X_fold_test = X_test[test_i]
         Y_fold_test = Y_test[test_i]
         
-        new_model = clone_model(original_model)
+        # new_model = clone_model(original_model)
+        new_model = ClearWeights(original_model)
         Compile(new_model)
         
         start_time = time.time()
@@ -130,7 +159,7 @@ def main():
     print("MAIN")
     
     #Set seed for reproducible results
-    seed(1)
+    seed(2)
     
     X, Y = ReadData(light='WL')
     # print(X.shape)
@@ -147,8 +176,9 @@ def main():
     autokeras_parameters = {'validation_split':0.15, 'epochs':50, 'max_trials':20}
     # NASExperiment(X, Y, "Autokeras", autokerasModel, autokeras_parameters)
     
-    fpnas_parameters = {'validation_split':0.15, 'P':4, 'Q':4, 'E':10, 'T':1, 'batch_size':8}
-    NASExperiment(X, Y, "Autokeras", fpnasModel, fpnas_parameters)
+    fpnas_parameters = {'validation_split':0.15, 'P':4, 'Q':4, 'E':10, 'T':15, 'batch_size':8,
+                        'blocks_size':[32, 32, 64, 64, 128, 128]}
+    NASExperiment(X, Y, "FPNAS-2", fpnasModel, fpnas_parameters)
 
 if __name__ == '__main__':
   main()

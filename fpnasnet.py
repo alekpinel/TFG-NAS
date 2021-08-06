@@ -361,7 +361,10 @@ class Block:
             return Concatenate(axis=1)(x)
         elif(layer == 'Add'):
             x = self.CreateShortcoutIfNecessary(x)
-            return Add()(x)
+            if (x[0].shape[1:] == x[1].shape[1:]):
+                return Add()(x)
+            else:
+                return x[0]
     
     def __call__(self, inputs):
         self.trainable_layers = []
@@ -503,10 +506,15 @@ class FPANet:
                 best_result = result
                 best_block = self.blocks[block_index]
         
+        self.blocks[block_index] = best_block
+        self.Ensamble(True)
+        self.Compile()
+        
         print(f"Best block {block_index}: {best_block.description}")
         print(f"{SummaryString(self.model)}")
         
-        self.blocks[block_index] = best_block
+        
+        
         return best_block
         
     def OptimizeArchitecture(self, P=4, Q=4, E=10, T=1, DEBUG=None, batch_size=32):
@@ -556,7 +564,6 @@ def fpnasModel(X, Y, validation_split=0.15, P=2, Q=4, E=3, T=1, D=None, blocks_s
         output_shape = 1
     
     if (blocks_size == None):
-        # blocks_size = [24,40, 40]
         blocks_size = [24, 24,40,40,128,128]
     
     print(f"Train: {X_train.shape}")
@@ -574,7 +581,6 @@ def fpnasModel(X, Y, validation_split=0.15, P=2, Q=4, E=3, T=1, D=None, blocks_s
     
     model.OptimizeArchitecture(P=P, Q=Q, E=E, T=T, DEBUG=D, batch_size=1)
     
-    # model.OptimizeBlock(0, epochs=P, n_best_models=E, best_epochs=Q, verbose=1, batch_size=1)
     
     return model.model
 
