@@ -161,7 +161,7 @@ def main():
     #Set seed for reproducible results
     seed(2)
     
-    X, Y = ReadData(light='WL')
+    X, Y = ReadData(light='NBI')
     # print(X.shape)
     # print(Y.shape)
     
@@ -174,11 +174,11 @@ def main():
     # NASExperiment(X, Y, "OriginalNN", OriginalNN, originalNN_parameters)
     
     autokeras_parameters = {'validation_split':0.15, 'epochs':50, 'max_trials':20}
-    # NASExperiment(X, Y, "Autokeras", autokerasModel, autokeras_parameters)
+    NASExperiment(X, Y, "Autokeras", autokerasModel, autokeras_parameters)
     
-    fpnas_parameters = {'validation_split':0.15, 'P':4, 'Q':4, 'E':10, 'T':15, 'batch_size':8,
-                        'blocks_size':[32, 32, 64, 64, 128, 128]}
-    NASExperiment(X, Y, "FPNAS-2", fpnasModel, fpnas_parameters)
+    fpnas_parameters = {'validation_split':0.15, 'P':4, 'Q':10, 'E':10, 'T':1, 'batch_size':8,
+                        'blocks_size':[32, 64, 64]}
+    # NASExperiment(X, Y, "FPNAS-3", fpnasModel, fpnas_parameters)
 
 if __name__ == '__main__':
   main()

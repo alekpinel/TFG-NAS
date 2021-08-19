@@ -358,7 +358,11 @@ class Block:
             return Split()(x)
         elif(layer == 'Concat'):
             x = self.CreateShortcoutIfNecessary(x)
-            return Concatenate(axis=1)(x)
+            if (x[0].shape[1:] == x[1].shape[1:]):
+                return Concatenate(axis=1)(x)
+            else:
+                return x[0]
+            
         elif(layer == 'Add'):
             x = self.CreateShortcoutIfNecessary(x)
             if (x[0].shape[1:] == x[1].shape[1:]):
@@ -446,6 +450,7 @@ class FPANet:
             block.SetTrainable(trainable)
             
         x = Flatten()(x)
+        x = Dropout(rate=0.5)(x)
         
         if (self.output_shape > 1):
             last_activation = 'softmax'
@@ -555,7 +560,7 @@ class FPANet:
         results = self.model.predict(X_test)
         return results
 
-def fpnasModel(X, Y, validation_split=0.15, P=2, Q=4, E=3, T=1, D=None, blocks_size=None, batch_size=1):
+def fpnasModel(X, Y, P, Q, E, T, D=None, validation_split=0.15, blocks_size=None, batch_size=1):
     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=validation_split, stratify=Y)
     input_shape = X_train.shape[1:]
     if (len(y_train.shape)>1):
