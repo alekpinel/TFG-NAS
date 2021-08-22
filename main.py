@@ -16,43 +16,16 @@ import statistics
 from sklearn import metrics
 from keras.models import clone_model
 
-from data_reading_visualization import ReadData, CalculateAccuracy, extraerSP_SS, ResultsToFile, createConfusionMatrix, convertToBinary, SummaryString, PlotModelToFile
+from data_reading_visualization import ReadData, CalculateAccuracy, extraerSP_SS, ResultsToFile, createConfusionMatrix, convertToBinary, SummaryString, PlotModelToFile, ClearWeights
 from original_nn import OriginalNN 
 from autokeras_model import autokerasModel
 from fpnasnet import fpnasModel
-import tensorflow as tf
+
 
 def Compile(model):
     model.compile(loss=keras.losses.binary_crossentropy,
               optimizer=keras.optimizers.Adam(),
               metrics=['accuracy'])
-
-def ClearWeights(model):
-    for layer in model.layers:
-        if isinstance(layer, tf.keras.Model): #if you're using a model as a layer
-            ClearWeights(layer) #apply function recursively
-            continue
-
-        #where are the initializers?
-        if hasattr(layer, 'cell'):
-            init_container = layer.cell
-        else:
-            init_container = layer
-
-        for key, initializer in init_container.__dict__.items():
-            if "initializer" not in key: #is this item an initializer?
-                  continue #if no, skip it
-
-            # find the corresponding variable, like the kernel or the bias
-            if key == 'recurrent_initializer': #special case check
-                var = getattr(init_container, 'recurrent_kernel')
-            else:
-                var = getattr(init_container, key.replace("_initializer", ""))
-
-            if var is not None:
-                var.assign(initializer(var.shape, var.dtype))
-            #use the initializer    
-    return model
 
 def NASExperiment(X, Y, model_name, NAS_function, NAS_parameters, test_percent=0.3, epochs=50, batch_size=32, verbose=1, save_results=True):
     
@@ -171,14 +144,14 @@ def main():
     
     
     originalNN_parameters = {'input_size_net':(224,224,3), 'output_size':1}
-    # NASExperiment(X, Y, "OriginalNN", OriginalNN, originalNN_parameters)
+    NASExperiment(X, Y, "OriginalNN", OriginalNN, originalNN_parameters, batch_size=32)
     
     autokeras_parameters = {'validation_split':0.15, 'epochs':50, 'max_trials':20}
-    NASExperiment(X, Y, "Autokeras", autokerasModel, autokeras_parameters)
+    # NASExperiment(X, Y, "Autokeras", autokerasModel, autokeras_parameters)
     
-    fpnas_parameters = {'validation_split':0.15, 'P':4, 'Q':10, 'E':10, 'T':1, 'batch_size':8,
-                        'blocks_size':[32, 64, 64]}
-    # NASExperiment(X, Y, "FPNAS-3", fpnasModel, fpnas_parameters)
+    fpnas_parameters = {'validation_split':0.30, 'P':4, 'Q':10, 'E':10, 'T':1, 'D':None, 'batch_size':32,
+                        'blocks_size':[32, 64]}
+    # NASExperiment(X, Y, "FPNAS-B2 BS16", fpnasModel, fpnas_parameters, batch_size=32)
 
 if __name__ == '__main__':
   main()

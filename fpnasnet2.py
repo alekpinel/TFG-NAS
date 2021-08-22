@@ -24,6 +24,10 @@ from keras.datasets import mnist, cifar10
 from keras.utils import np_utils
 from sklearn.model_selection import train_test_split
 
+
+from sklearn import metrics
+from data_reading_visualization import CalculateAccuracy, extraerSP_SS, ResultsToFile, createConfusionMatrix, convertToBinary, SummaryString, PlotModelToFile, ClearWeights
+
 #Write something to file
 def WriteFile(file_name, string, mode='a'):
     mainpath = "./"
@@ -33,26 +37,21 @@ def WriteFile(file_name, string, mode='a'):
     f.close()
 
 #This function generates all the possible block architectures
-def GenerateBlockArchitectureList():
-    VERTICES = ['None', 'Split', 'Concat', 'Add']
+def GenerateBlockArchitectureList(verbose=0):
+    VERTICES = ['None', 'Add']
     EDGES = ['No', 'Id', 'Conv']
-    RATIOS = [4, 6, 8]
-    STRIDES = [1, 2]
+    KERNEL_SIZE = [3, 5]
+    # STRIDES = [1, 2]
+    STRIDES = [1]
     
     def PossibleEdges(block):
-        poss_edges = ['Id', 'No']
-        if ('Conv' not in block and 'None' not in block):
-            poss_edges.append('Conv')
+        poss_edges = ['Id', 'Conv', 'No']
+        
         return poss_edges
     
     def PossibleVertices(block):
-        poss_vertices = ['Add']
-        if ('None' in block):
-            return ['None']
-        if ('Split' in block or 'Concat' in block or 'Add' in block):
-            poss_vertices.append('None')
-        if ('Split' in block and 'Concat' not in block):
-            poss_vertices.append('Concat')
+        poss_vertices = ['Add', 'None']
+        
         return poss_vertices
     
     def AddEdge(block):
@@ -85,97 +84,61 @@ def GenerateBlockArchitectureList():
                 new_blocks.append(new_block)
         return new_blocks
     
-    def CheckNodeConsistency(node):
-        if (node[0] == 'None'):
-            if (node[1] == 'Id' and node[2] == 'No' and node[3] == 'No'):
-                return True
-        else:
-            if (node[1] != 'No' and (node[2] == 'No' or node[3] == 'No') and not (node[2] == 'No' and node[3] == 'No')):
-                return True
-        return False
+    def CheckVertexConsistency(nodes):
+        if (nodes[1] == 'No'):
+            return False
+        
+        if (nodes[0] == 'None'):
+            if (nodes[2] != 'No'):
+                return False
+        elif (nodes[0] == 'Add'):
+            if (nodes[1] == 'No' or nodes[2] == 'No'):
+                return False
+        
+        return True
+        
     
     def CheckBlockConsistency(all_blocks):
         new_blocks = []
         for block in all_blocks:
             #A block must have a conv
-            if ('Conv' not in block):
+            # if ('Conv' not in block):
+            #     continue
+            
+            valid = True
+            for i in range(0, len(block), 3):
+                if(not CheckVertexConsistency(block[i:i+3])):
+                    valid = False
+            if (not valid):
                 continue
             
-            #If there is a split, there must be a concat
-            if ('Split' in block and 'Concat' not in block):
-                continue
-            #Must be input and output
-            if (block[1] == 'No' or block[10] == 'No'):
-                continue
-            # There must be only 2 input per node
-            if (not (CheckNodeConsistency(block[2:6]) and CheckNodeConsistency(block[6:10]))):
-                continue
-            
-            #No concat with split+input
-            if (block[0] == 'Split' and block[5] != 'No'):
-                continue
-            
-            #No concat with split+input
-            if (block[0] == 'Split' and block[6]== 'Concat' and block[9] != 'No'):
-                continue
-            
-            #No concat with split+input
-            if (block[0] == 'Split' and block[2]== 'Concat' and block[8] != 'No'):
-                continue
-            
-            if (block[4] == 'Conv'):
-                continue
-            
-            if (block[0] != 'Split' and (block[1] != 'Id' or block[3] == 'No' or block[4] != 'No' or block[8] != 'No')):
-                continue
-            
-            if (block[8] == 'Conv' or block[9] == 'Conv'):
-                continue
-                   
             new_blocks.append(block)
         return new_blocks
     
     def ExpandConvs(all_blocks):
         new_blocks = []
-        for block in all_blocks:
-            concat_index = block.index('Conv')
-            short_index = None
-            if ('Short' in block):
-                short_index = block.index('Short')
-                
-            for ratio in RATIOS:
-                for strides in STRIDES:
+        
+        for kernel_size in KERNEL_SIZE:
+            for strides in STRIDES:
+                for block in all_blocks:
                     new_block = block.copy()
-                    new_block[concat_index] = f"Conv_{ratio}_{strides}"
-                    if (short_index != None):
-                        new_block[short_index] = f"Short_{ratio}_{strides}"
+                    # if ('Conv' not in block):
+                    #     new_blocks.append(new_block)
+                    
+                    for i in range(len(block)):
+                        if (block[i] == 'Conv'):
+                                    new_block[i] = f"Conv_{kernel_size}_{strides}"
                     new_blocks.append(new_block)
             
         return new_blocks
     
     possible_blocks = []
+    blocks_2 = [[]]
     
-    #Blocks with split
-    blocks_2 = [['Split'], ['Add']]
-    # Edge 1
-    blocks_2 = IncorporateBlocks(blocks_2, 'Edge')
-    # Vertex 1
     blocks_2 = IncorporateBlocks(blocks_2, 'Vertex')
     # Edge 2
     blocks_2 = IncorporateBlocks(blocks_2, 'Edge')
     # Edge 3
-    blocks_2 = IncorporateBlocks(blocks_2, 'Edge')
-    # Edge 3
-    blocks_2 = IncorporateBlocks(blocks_2, 'Edge')
-    # Vertex 2
-    blocks_2 = IncorporateBlocks(blocks_2, 'Vertex')
-    # Edge 4
-    blocks_2 = IncorporateBlocks(blocks_2, 'Edge')
-    # Edge 5
-    blocks_2 = IncorporateBlocks(blocks_2, 'Edge')
-    # Edge 5
-    blocks_2 = IncorporateBlocks(blocks_2, 'Edge')
-    # Edge 5
     blocks_2 = IncorporateBlocks(blocks_2, 'Edge')
     
     possible_blocks = possible_blocks + blocks_2
@@ -183,217 +146,70 @@ def GenerateBlockArchitectureList():
     possible_blocks = CheckBlockConsistency(possible_blocks)
     possible_blocks = ExpandConvs(possible_blocks)
     
-    
-    # for block in possible_blocks:
-    #     print(block)
-    # print(f"N blocks: {len(possible_blocks)}")
+    if(verbose >=1):
+        for block in possible_blocks:
+            print(block)
+        print(f"N blocks: {len(possible_blocks)}")
     
     return possible_blocks
 
-class InvertedResidual(Layer):
-    def __init__(self, filters, strides, expansion_factor=6, trainable=True,
-    	         name=None, **kwargs):
-        super(InvertedResidual, self).__init__(trainable=trainable, name=name, **kwargs)
-        self.filters = filters
-        self.strides = strides
-        self.expansion_factor = expansion_factor	# allowed to be decimal value
-
-    def build(self, input_shape):
-        input_channels = int(input_shape[3])
-        self.ptwise_conv1 = Conv2D(filters=int(input_channels*self.expansion_factor),
-        	                       kernel_size=1, use_bias=False)
-        self.dwise = DepthwiseConv2D(kernel_size=3, strides=self.strides,
-        	                         padding='same', use_bias=False)
-        self.ptwise_conv2 = Conv2D(filters=self.filters, kernel_size=1, use_bias=False)
-
-        self.bn1 = BatchNormalization()
-        self.bn2 = BatchNormalization()
-        self.bn3 = BatchNormalization()
-
-    def call(self, input_x):
-        # Expansion to high-dimensional space
-        x = self.ptwise_conv1(input_x)
-        x = self.bn1(x)
-        x = tf.nn.relu6(x)
-
-        # Spatial filtering
-        x = self.dwise(x)
-        x = self.bn2(x)
-        x = tf.nn.relu6(x)
-
-        # Projection back to low-dimensional space w/ linear activation
-        x = self.ptwise_conv2(x)
-        x = self.bn3(x)
-
-        # Residual connection if i/o have same spatial and depth dims
-        if input_x.shape[1:] == x.shape[1:]:
-            x += input_x
-        return x
-
-    def get_config(self):
-        cfg = super(InvertedResidual, self).get_config()
-        cfg.update({'filters': self.filters,
-        	        'strides': self.strides,
-        	        'expansion_factor': self.expansion_factor})
-        return cfg
-
-#Implementation of a Split layer
-# https://www.programmersought.com/article/76885404311/
-class Split(Layer):
-    def __init__(self, **kwargs):
-        super(Split, self).__init__(**kwargs)
-
-    def build(self, input_shape):
-        # Call the build function of the parent class to build this layer
-        super(Split, self).build(input_shape)
-        # Save the shape, use other functions
-        self.shape = input_shape[0]
-
-    def call(self, x, mask=None):
-        # Split x into two tensors
-        seq = [x[0][:, 0:self.shape[1] // 2, ...],
-               x[0][:, self.shape[1] // 2:, ...]]
-        return seq
-
-    def compute_mask(self, inputs, input_mask=None):
-        # This layer outputs two tensors and needs to return multiple masks, and the mask can be None
-        return [None, None]
-
-    def get_output_shape_for(self, input_shape):
-        # If this layer returns two tensors, it will return the shape of the two tensors
-        shape0 = list(self.shape)
-        shape1 = list(self.shape)
-        shape0[1] = self.shape[1] // 2
-        shape1[1] = self.shape[1] - self.shape[1] // 2
-        return [shape0, shape1]
-
 class Block:
     def __init__(self, block, n_filters):
+        
         self.n_filters = n_filters
         self.description = block
+        self.trainable_layers = []
         
-        self.vertex1 = block[0]
-        self.edge_I_1 = block[1]
+        self.layers = []
         
-        self.vertex2 = block[2]
-        self.edge_1_2_1 = block[3]
-        self.edge_1_2_2 = block[4]
-        self.edge_I_2 = block[5]
-        
-        self.vertex3 = block[6]
-        self.edge_2_3 = block[7]
-        self.edge_1_3 = block[8]
-        self.edge_I_3 = block[9]
-        
-        self.edge_3_O = block[10]
+        for i in range(len(block)):
+            if (i % 3 == 0):
+                self.layers.append(self.CreateVertex(block[i]))
+            else:
+                self.layers.append(self.CreateEdge(block[i]))
     
     def AddLayer(self, layer):
         self.trainable_layers.append(layer)
         return layer
     
-    def CreateEdge(self, x, layer):
+    def CreateEdge(self, layer):
         if (layer == 'No'):
             return 'No'
         elif(layer == 'Id'):
-            return x
+            return 'Id'
         else:
             elements_list = layer.split("_")
             
             filters = self.n_filters
-            ratio = int(elements_list[1])
+            kernel_size = (int(elements_list[1]), int(elements_list[1]))
             strides = int(elements_list[2])
-            return self.AddLayer(InvertedResidual(filters=filters, strides=strides, expansion_factor=ratio))(x)
-
-    def CreateShortcoutIfNecessary(self, x):
-        # print(x[0].shape)
-        # print(x[1].shape)
-        if (x[0].shape[1:] == x[1].shape[1:]):
+            return self.AddLayer(Conv2D(filters=filters, kernel_size=kernel_size, strides=strides, padding='same'))
+    
+    def CreateVertex(self, layer):
+        if (layer == 'None'):
+            return 'None'
+        elif(layer == 'Add'):
+                return Add()
+            
+    def ConnectVertex(self, vertex_index, x1, x2):
+        vertex = self.layers[vertex_index]
+        if (vertex == 'None'):
+            return self.ConnectEdge(vertex_index + 1, x1)
+        else:
+            return vertex([self.ConnectEdge(vertex_index + 1, x1), self.ConnectEdge(vertex_index + 2, x2)])
+    
+    def ConnectEdge(self, edge_index, x):
+        edge = self.layers[edge_index]
+        if (edge == 'Id'):
             return x
         else:
-            #Calculate the strides
-            shortcout = -1
-            strides = 1
-            if (x[0].shape[1] < x[1].shape[1]):
-                shortcout = 1
-                strides = (x[1].shape[1] // x[0].shape[1], x[1].shape[2] // x[0].shape[2])
-            elif (x[1].shape[1] < x[0].shape[1]):
-                shortcout = 0
-                strides = (x[0].shape[1] // x[1].shape[1], x[0].shape[2] // x[1].shape[2])
-            
-            #Calculate the filters
-            if (x[0].shape[3] == x[1].shape[3]):
-                filters = x[0].shape[3]
-            elif (x[0].shape[3] == self.n_filters):
-                shortcout = 1
-                filters = self.n_filters
-            elif (x[1].shape[3] == self.n_filters):
-                shortcout = 0
-                filters = self.n_filters
-            
-            # print(f"shortcout {shortcout} strides: {strides} filters: {filters}")
-            x[shortcout] = self.AddLayer(Conv2D(filters, (3, 3), strides=strides, padding='same', use_bias=False))(x[shortcout])
-            x[shortcout] = self.AddLayer(BatchNormalization())(x[shortcout])
-            
-            return x
-            
-    
-    def CreateVertex(self, x, layer):
-        if (len(x) > 1 and isinstance(x[1], str) and x[1] == 'No'):
-            x.pop(1)
-        if (len(x) > 2 and isinstance(x[2], str) and x[2] == 'No'):
-            x.pop(2)
-        
-        if (layer == 'None' or (layer == 'Add' and len(x) == 1)):
-            return x[0]
-        elif(layer == 'Split'):
-            return Split()(x)
-        elif(layer == 'Concat'):
-            x = self.CreateShortcoutIfNecessary(x)
-            if (x[0].shape[1:] == x[1].shape[1:]):
-                return Concatenate(axis=1)(x)
-            else:
-                return x[0]
-            
-        elif(layer == 'Add'):
-            x = self.CreateShortcoutIfNecessary(x)
-            if (x[0].shape[1:] == x[1].shape[1:]):
-                return Add()(x)
-            else:
-                return x[0]
+            return edge(x)
     
     def __call__(self, inputs):
-        self.trainable_layers = []
         
-        x_I_1 = self.CreateEdge(inputs, self.edge_I_1)
+        x_v1 = self.ConnectVertex(0, inputs, inputs)
         
-        x_v1 = self.CreateVertex([x_I_1], self.vertex1)
-        
-        if (self.vertex1 == 'Split'):
-            x_1_2_1 = self.CreateEdge(x_v1[0], self.edge_1_2_1)
-            x_1_2_2 = self.CreateEdge(x_v1[1], self.edge_1_2_2)
-        else:
-            x_1_2_1 = self.CreateEdge(x_v1, self.edge_1_2_1)
-            x_1_2_2 = self.CreateEdge(x_v1, self.edge_1_2_2)
-        
-        x_I_2 = self.CreateEdge(inputs, self.edge_I_2)
-        
-        x_v2 = self.CreateVertex([x_1_2_1, x_1_2_2, x_I_2], self.vertex2)
-        
-        x_2_3 = self.CreateEdge(x_v2, self.edge_2_3)
-        
-        if (self.vertex1 == 'Split'):
-            x_1_3 = self.CreateEdge(x_v1[1], self.edge_1_3)
-        else:
-            x_1_3 = self.CreateEdge(x_v1, self.edge_1_3)
-            
-        
-        x_I_3 = self.CreateEdge(inputs, self.edge_I_3)
-        
-        x_v3 = self.CreateVertex([x_2_3, x_1_3, x_I_3], self.vertex3)
-        
-        x_3_O = self.CreateEdge(x_v3, self.edge_3_O)
-        
-        return x_3_O
+        return x_v1
     
     def SetTrainable(self, trainable):
         for layer in self.trainable_layers:
@@ -422,9 +238,14 @@ class FPANet:
         for n_filters in self.block_filters:
             self.blocks.append(Block(self.block_architectures[np.random.randint(0, len(self.block_architectures))], n_filters))
         
-        self.output = Dense(self.output_shape, activation='softmax')
+        if (self.output_shape > 1):
+            last_activation = 'softmax'
+        else:
+            last_activation = 'sigmoid'
         
-        self.Ensamble(verbose=0)
+        self.dense = Dense(self.output_shape, activation=last_activation)
+        
+        self.Ensamble(verbose=1)
         
         print("Initial State")
         print(self.model.summary())
@@ -440,15 +261,15 @@ class FPANet:
         x = Flatten()(x)
         x = Dropout(rate=0.5)(x)
         
-        if (self.output_shape > 1):
-            last_activation = 'softmax'
-        else:
-            last_activation = 'sigmoid'
+        # if (self.output_shape > 1):
+        #     last_activation = 'softmax'
+        # else:
+        #     last_activation = 'sigmoid'
         
-        self.output = Dense(self.output_shape, activation=last_activation)
-        x = self.output(x)
-        # self.output.trainable = trainable
-        # x = Dense(self.output_shape, activation='softmax')(x)
+        # self.dense = Dense(self.output_shape, activation=last_activation)
+        x = self.dense(x)
+        self.dense.trainable = trainable
+        
         self.model = Model(inputs = self.input, outputs = x)
     
     def OptimizeBlock(self, block_index, epochs=2, n_best_models = 3, best_epochs = 4, batch_size=32, verbose=0):
@@ -469,12 +290,17 @@ class FPANet:
             self.Ensamble(False, verbose=0)
             self.blocks[block_index].SetTrainable(True)
             
+            if verbose:
+                print(SummaryString(self.model))
+            
             # if verbose:
             #     print(self.model.summary())
                 
             self.Compile()
             res = self.Train(self.data[0], self.data[1], self.data[2], self.data[3], epochs=epochs, batch_size=batch_size)
             results.append(res.history['val_loss'][-1])
+            
+            
             
             i+=1
         
@@ -487,11 +313,9 @@ class FPANet:
         for index in selected_index:
             self.blocks[block_index] = all_blocks[index]
             
-            if verbose:
-                print(all_blocks[index].description)
-            
             #Ensamble with all block unfrozen
             self.Ensamble(True, verbose)
+            ClearWeights(self.model)
             self.Compile()
             res = self.Train(self.data[0], self.data[1], self.data[2], self.data[3], epochs=best_epochs, batch_size=batch_size)
             result = res.history['val_loss'][-1]
@@ -501,7 +325,9 @@ class FPANet:
         
         self.blocks[block_index] = best_block
         self.Ensamble(True)
+        ClearWeights(self.model)
         self.Compile()
+        self.Train(self.data[0], self.data[1], self.data[2], self.data[3], epochs=best_epochs, batch_size=batch_size)
         
         print(f"Best block {block_index}: {best_block.description}")
         print(f"{SummaryString(self.model)}")
@@ -600,14 +426,33 @@ def main():
     print("MAIN")
     np.random.seed(1)
     
-    X, Y = ReadData(light='WL')
+    X, Y = ReadData(light='NBI')
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3, stratify=Y)
     Y_train = convertToBinary(Y_train)
     Y_test = convertToBinary(Y_test)
     
+    # GenerateBlockArchitectureList(verbose=1)
+    # return 0
+    
+    batchsize = 32
+    
+    blocks_size=[32, 64]
+    model = fpnasModel(X_train, Y_train, validation_split=0.15, P=2, Q=4, E=3, T=1, batch_size=batchsize, blocks_size=blocks_size)
     
     
-    fpnasModel(X_train, Y_train, validation_split=0.15, P=2, Q=4, E=3, T=1, batch_size=8)
+    
+    #Test
+    ClearWeights(model)
+    model.fit(X_train, Y_train, batch_size=batchsize, epochs=50)
+    
+    
+    y_predict = model(X_test)
+    y_predict = [1 if val > 0.5 else 0 for val in y_predict]
+    cm = metrics.confusion_matrix(Y_test, y_predict)
+    accuracy, specificity, sensitivity, precision, f1score = extraerSP_SS(cm)
+    statistics_s = f"\nRESULTS: \nACC:{accuracy:.3f} \nSP:{specificity:.3f} \nSS:{sensitivity:.3f} \nPr:{precision:.3f} \nScore:{f1score:.3f}"
+    print(statistics_s)
+    createConfusionMatrix(cm, "Test", save=False)
     
     return 0
     
@@ -629,7 +474,7 @@ def main():
     Q=4
     E=3
     T=1
-    fpnasModel(X_train, y_train, validation_split=0.15, P=P, Q=Q, E=E, T=T, batch_size=32)
+    fpnasModel(X_train, y_train, validation_split=0.15, P=P, Q=Q, E=E, T=T, batch_size=8)
     # model.OptimizeArchitecture(P=P, Q=Q, E=E, T=T, DEBUG=D)
     
     return 0
