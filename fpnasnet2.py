@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from random import sample
 
 from keras.models import Sequential, Model
-from keras.layers import Input, Dense, Dropout, Flatten, ReLU, Lambda
+from keras.layers import Input, Dense, Dropout, Flatten, ReLU, Lambda, MaxPooling2D
 from keras.layers import Conv2D, MaxPooling2D, Activation, Add, Concatenate, BatchNormalization, DepthwiseConv2D
 from keras.optimizers import SGD
 import tensorflow as tf
@@ -94,6 +94,9 @@ def GenerateBlockArchitectureList(verbose=0):
         elif (nodes[0] == 'Add'):
             if (nodes[1] == 'No' or nodes[2] == 'No'):
                 return False
+            if (nodes[1] == 'Id' and nodes[2] == 'Id'):
+                return False
+        
         
         return True
         
@@ -102,8 +105,8 @@ def GenerateBlockArchitectureList(verbose=0):
         new_blocks = []
         for block in all_blocks:
             #A block must have a conv
-            # if ('Conv' not in block):
-            #     continue
+            if ('Conv' not in block):
+                continue
             
             valid = True
             for i in range(0, len(block), 3):
@@ -141,6 +144,12 @@ def GenerateBlockArchitectureList(verbose=0):
     # Edge 3
     blocks_2 = IncorporateBlocks(blocks_2, 'Edge')
     
+    blocks_2 = IncorporateBlocks(blocks_2, 'Vertex')
+    # Edge 2
+    blocks_2 = IncorporateBlocks(blocks_2, 'Edge')
+    # Edge 3
+    blocks_2 = IncorporateBlocks(blocks_2, 'Edge')
+    
     possible_blocks = possible_blocks + blocks_2
     
     possible_blocks = CheckBlockConsistency(possible_blocks)
@@ -162,17 +171,20 @@ class Block:
         
         self.layers = []
         
-        for i in range(len(block)):
-            if (i % 3 == 0):
-                self.layers.append(self.CreateVertex(block[i]))
-            else:
-                self.layers.append(self.CreateEdge(block[i]))
+        for i in range(0, len(block), 3):
+            self.layers.append('Building')
+            self.layers.append(self.CreateEdge(i+1))
+            self.layers.append(self.CreateEdge(i+2))
+            self.layers[i] = self.CreateVertex(i)
+            
+        self.last_layer = self.AddLayer(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same'))
     
     def AddLayer(self, layer):
         self.trainable_layers.append(layer)
         return layer
     
-    def CreateEdge(self, layer):
+    def CreateEdge(self, nlayer):
+        layer = self.description[nlayer]
         if (layer == 'No'):
             return 'No'
         elif(layer == 'Id'):
@@ -185,11 +197,14 @@ class Block:
             strides = int(elements_list[2])
             return self.AddLayer(Conv2D(filters=filters, kernel_size=kernel_size, strides=strides, padding='same'))
     
-    def CreateVertex(self, layer):
+    def CreateVertex(self, nlayer):
+        layer = self.description[nlayer]
         if (layer == 'None'):
             return 'None'
         elif(layer == 'Add'):
-                return Add()
+            self.CreateShortcout(nlayer+1)
+            self.CreateShortcout(nlayer+2)
+            return Add()
             
     def ConnectVertex(self, vertex_index, x1, x2):
         vertex = self.layers[vertex_index]
@@ -205,11 +220,62 @@ class Block:
         else:
             return edge(x)
     
+    def CreateShortcout(self, edge_index):
+        print(self.layers)
+        strides = 1
+        filters = self.n_filters
+        layer0 = self.layers[edge_index]
+        layer1 = self.AddLayer(Conv2D(filters, (1, 1), strides=strides, padding='same', use_bias=False))
+        layer2 = self.AddLayer(BatchNormalization())
+        
+        def Shortcout(x):
+            if (layer0 != 'No' and layer0 != 'Id'):
+                x=layer0(x)
+            x=layer1(x)
+            x=layer2(x)
+            return x
+        
+        self.layers[edge_index] = Shortcout
+    
+    def CreateShortcoutIfNecessary(self, x):
+        if (x[0].shape[1:] == x[1].shape[1:]):
+            return x
+        else:
+            #Calculate the strides
+            shortcout = -1
+            strides = 1
+            if (x[0].shape[1] < x[1].shape[1]):
+                shortcout = 1
+                strides = (x[1].shape[1] // x[0].shape[1], x[1].shape[2] // x[0].shape[2])
+            elif (x[1].shape[1] < x[0].shape[1]):
+                shortcout = 0
+                strides = (x[0].shape[1] // x[1].shape[1], x[0].shape[2] // x[1].shape[2])
+            
+            #Calculate the filters
+            if (x[0].shape[3] == x[1].shape[3]):
+                filters = x[0].shape[3]
+            elif (x[0].shape[3] == self.n_filters):
+                shortcout = 1
+                filters = self.n_filters
+            elif (x[1].shape[3] == self.n_filters):
+                shortcout = 0
+                filters = self.n_filters
+            
+            # print(f"shortcout {shortcout} strides: {strides} filters: {filters}")
+            x[shortcout] = self.AddLayer(Conv2D(filters, (1, 1), strides=strides, padding='same', use_bias=False))(x[shortcout])
+            x[shortcout] = self.AddLayer(BatchNormalization())(x[shortcout])
+            
+            return x
+    
     def __call__(self, inputs):
         
         x_v1 = self.ConnectVertex(0, inputs, inputs)
         
-        return x_v1
+        x_v2 = self.ConnectVertex(3, x_v1, inputs)
+        
+        output = self.last_layer(x_v2)
+        
+        return output
     
     def SetTrainable(self, trainable):
         for layer in self.trainable_layers:
@@ -261,12 +327,6 @@ class FPANet:
         x = Flatten()(x)
         x = Dropout(rate=0.5)(x)
         
-        # if (self.output_shape > 1):
-        #     last_activation = 'softmax'
-        # else:
-        #     last_activation = 'sigmoid'
-        
-        # self.dense = Dense(self.output_shape, activation=last_activation)
         x = self.dense(x)
         self.dense.trainable = trainable
         
@@ -436,7 +496,7 @@ def main():
     
     batchsize = 32
     
-    blocks_size=[32, 64]
+    blocks_size=[32, 64, 64]
     model = fpnasModel(X_train, Y_train, validation_split=0.15, P=2, Q=4, E=3, T=1, batch_size=batchsize, blocks_size=blocks_size)
     
     

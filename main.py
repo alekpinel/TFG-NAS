@@ -19,7 +19,7 @@ from keras.models import clone_model
 from data_reading_visualization import ReadData, CalculateAccuracy, extraerSP_SS, ResultsToFile, createConfusionMatrix, convertToBinary, SummaryString, PlotModelToFile, ClearWeights
 from original_nn import OriginalNN 
 from autokeras_model import autokerasModel
-from fpnasnet import fpnasModel
+from fpnasnet2 import fpnasModel
 
 
 def Compile(model):
@@ -144,14 +144,14 @@ def main():
     
     
     originalNN_parameters = {'input_size_net':(224,224,3), 'output_size':1}
-    NASExperiment(X, Y, "OriginalNN", OriginalNN, originalNN_parameters, batch_size=32)
+    # NASExperiment(X, Y, "OriginalNN", OriginalNN, originalNN_parameters, batch_size=32)
     
     autokeras_parameters = {'validation_split':0.15, 'epochs':50, 'max_trials':20}
     # NASExperiment(X, Y, "Autokeras", autokerasModel, autokeras_parameters)
     
-    fpnas_parameters = {'validation_split':0.30, 'P':4, 'Q':10, 'E':10, 'T':1, 'D':None, 'batch_size':32,
-                        'blocks_size':[32, 64]}
-    # NASExperiment(X, Y, "FPNAS-B2 BS16", fpnasModel, fpnas_parameters, batch_size=32)
+    fpnas_parameters = {'validation_split':0.30, 'P':4, 'Q':10, 'E':10, 'T':4, 'D':None, 'batch_size':16,
+                        'blocks_size':[32, 64, 64]}
+    NASExperiment(X, Y, "FPNAS2-B3 T1 BS16", fpnasModel, fpnas_parameters, batch_size=16)
 
 if __name__ == '__main__':
   main()
