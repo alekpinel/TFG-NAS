@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from random import sample
 
 from keras.models import Sequential, Model
-from keras.layers import Input, Dense, Dropout, Flatten, ReLU, Lambda, MaxPooling2D
+from keras.layers import Input, Dense, Dropout, Flatten, ReLU, Lambda, MaxPooling2D, AveragePooling2D
 from keras.layers import Conv2D, MaxPooling2D, Activation, Add, Concatenate, BatchNormalization, DepthwiseConv2D
 from keras.optimizers import SGD
 import tensorflow as tf
@@ -39,13 +39,13 @@ def WriteFile(file_name, string, mode='a'):
 #This function generates all the possible block architectures
 def GenerateBlockArchitectureList(verbose=0):
     VERTICES = ['None', 'Add']
-    EDGES = ['No', 'Id', 'Conv']
+    EDGES = ['No', 'Id', 'Conv', 'Avg', 'Max', 'Batch']
     KERNEL_SIZE = [3, 5]
     # STRIDES = [1, 2]
     STRIDES = [1]
     
     def PossibleEdges(block):
-        poss_edges = ['Id', 'Conv', 'No']
+        poss_edges = ['Id', 'Conv', 'No', 'Batch']
         
         return poss_edges
     
@@ -163,10 +163,11 @@ def GenerateBlockArchitectureList(verbose=0):
     return possible_blocks
 
 class Block:
-    def __init__(self, block, n_filters):
+    def __init__(self, block, n_filters, reduction=True):
         
         self.n_filters = n_filters
         self.description = block
+        self.reduction = reduction
         self.trainable_layers = []
         
         self.layers = []
@@ -189,6 +190,12 @@ class Block:
             return 'No'
         elif(layer == 'Id'):
             return 'Id'
+        elif(layer == 'Avg'):
+            return self.AddLayer(AveragePooling2D(pool_size=(2,2), strides=(1, 1), padding='same'))
+        elif(layer == 'Max'):
+            return self.AddLayer(MaxPooling2D(pool_size=(2,2), strides=(1, 1), padding='same'))
+        elif(layer == 'Batch'):
+            return self.AddLayer(BatchNormalization())
         else:
             elements_list = layer.split("_")
             
@@ -273,7 +280,10 @@ class Block:
         
         x_v2 = self.ConnectVertex(3, x_v1, inputs)
         
-        output = self.last_layer(x_v2)
+        if (self.reduction):
+            output = self.last_layer(x_v2)
+        else:
+            output = x_v2
         
         return output
     
@@ -297,12 +307,30 @@ class FPANet:
     def SetParameters(self, X_train, Y_train, X_val, Y_val):
         self.data = [X_train, Y_train, X_val, Y_val]
     
+    def SetPreMadeBuild(self, blocks):
+        self.blocks = []
+        
+        for nfilter, block in zip(self.block_filters, blocks):
+            self.blocks.append(Block(block, nfilter, reduction=True))
+        
+        if (self.output_shape > 1):
+            last_activation = 'softmax'
+        else:
+            last_activation = 'sigmoid'
+        
+        self.dense = Dense(self.output_shape, activation=last_activation)
+        
+        self.Ensamble(verbose=1)
+        self.Compile()
+    
     def GenerateInitialState(self):
         self.input = Input(shape=self.input_shape)
         self.blocks = []
         
+        i = 0
         for n_filters in self.block_filters:
-            self.blocks.append(Block(self.block_architectures[np.random.randint(0, len(self.block_architectures))], n_filters))
+            self.blocks.append(Block(self.block_architectures[np.random.randint(0, len(self.block_architectures))], n_filters, reduction=True))
+            i += 1
         
         if (self.output_shape > 1):
             last_activation = 'softmax'
@@ -325,10 +353,10 @@ class FPANet:
             block.SetTrainable(trainable)
             
         x = Flatten()(x)
-        x = Dropout(rate=0.5)(x)
+        x = Dropout(rate=0.2)(x)
         
         x = self.dense(x)
-        self.dense.trainable = trainable
+        # self.dense.trainable = trainable
         
         self.model = Model(inputs = self.input, outputs = x)
     
@@ -350,8 +378,8 @@ class FPANet:
             self.Ensamble(False, verbose=0)
             self.blocks[block_index].SetTrainable(True)
             
-            if verbose:
-                print(SummaryString(self.model))
+            # if verbose:
+            #     print(SummaryString(self.model))
             
             # if verbose:
             #     print(self.model.summary())
@@ -409,6 +437,9 @@ class FPANet:
             for block_index in range(len(self.block_filters)):
                 self.OptimizeBlock(block_index, epochs=P, n_best_models=E, best_epochs=Q, verbose=1, batch_size=batch_size)
                 
+        print("Final Architecture")
+        for block in self.blocks:
+            print(block.description)
         
         WriteFile("fpnas_log", f"Final Model \n{SummaryString(self.model)}\n")
     
@@ -436,7 +467,7 @@ class FPANet:
         results = self.model.predict(X_test)
         return results
 
-def fpnasModel(X, Y, P, Q, E, T, D=None, validation_split=0.15, blocks_size=None, batch_size=1):
+def fpnasModel(X, Y, P, Q, E, T, D=None, validation_split=0.15, blocks_size=None, batch_size=1, blocks=None):
     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=validation_split, stratify=Y)
     input_shape = X_train.shape[1:]
     if (len(y_train.shape)>1):
@@ -460,7 +491,10 @@ def fpnasModel(X, Y, P, Q, E, T, D=None, validation_split=0.15, blocks_size=None
     # print(predictions)
     # print(y_test)
     
-    model.OptimizeArchitecture(P=P, Q=Q, E=E, T=T, DEBUG=D, batch_size=batch_size)
+    if (blocks == None):
+        model.OptimizeArchitecture(P=P, Q=Q, E=E, T=T, DEBUG=D, batch_size=batch_size)
+    else:
+        model.SetPreMadeBuild(blocks);
     
     
     return model.model
@@ -496,10 +530,11 @@ def main():
     
     batchsize = 32
     
-    blocks_size=[32, 64, 64]
-    model = fpnasModel(X_train, Y_train, validation_split=0.15, P=2, Q=4, E=3, T=1, batch_size=batchsize, blocks_size=blocks_size)
+    blocks = [['Add', 'Conv_5_1', 'Conv_5_1', 'None', 'Batch', 'No'],
+              ['Add', 'Id', 'Conv_3_1', 'Add', 'Id', 'Batch']]
     
-    
+    blocks_size=[32, 64]
+    model = fpnasModel(X_train, Y_train, validation_split=0.15, P=4, Q=10, E=10, T=1, D=None, batch_size=batchsize, blocks_size=blocks_size, blocks=blocks)
     
     #Test
     ClearWeights(model)
