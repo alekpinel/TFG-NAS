@@ -21,6 +21,10 @@ from original_nn import OriginalNN
 from autokeras_model import autokerasModel
 from fpnasnet2 import fpnasModel
 
+import sys
+sys.path.insert(0, './enas')
+from enasTest import enasModel
+
 
 def Compile(model):
     model.compile(loss=keras.losses.binary_crossentropy,
@@ -63,11 +67,11 @@ def NASExperiment(X, Y, model_name, NAS_function, NAS_parameters, test_percent=0
         # With the final model, apply leave one out
         cm, fit_time = leaveOneOut(X_train, X_test, Y_train, Y_test, NAS_model, epochs=epochs, batch_size=batch_size, verbose=1)
     else:
-        cm, fit_time = holdOut(X_train, X_test, Y_train, Y_test, NAS_model, epochs=epochs, batch_size=batch_size, verbose=1)
+        cm, fit_time = holdOut(X_train, X_test, Y_train, Y_test, NAS_model, clearModel=False, epochs=epochs, batch_size=batch_size, verbose=1)
     
     # Extract the results and show them
     accuracy, specificity, sensitivity, precision, f1score = extraerSP_SS(cm)
-    statistics_s = f"\nRESULTS: \nACC:{accuracy:.3f} \nSP:{specificity:.3f} \nSS:{sensitivity:.3f} \nPr:{precision:.3f} \nScore:{f1score:.3f} \nSearching time:{searching_time:.3f} \nFitting time:{fit_time:.3f}"
+    statistics_s = f"\nRESULTS: \nACC:{accuracy:.3f} \nSS:{sensitivity:.3f} \nSP:{specificity:.3f} \nPr:{precision:.3f} \nScore:{f1score:.3f} \nSearching time:{searching_time:.3f} \nFitting time:{fit_time:.3f}"
     result_s += statistics_s
     
     if (verbose):
@@ -79,7 +83,7 @@ def NASExperiment(X, Y, model_name, NAS_function, NAS_parameters, test_percent=0
     createConfusionMatrix(cm, model_name, save=save_results)
 
 # Realizes Leave One Out only in the test set, while the training is always used
-def leaveOneOut(X_train, X_test, Y_train, Y_test, original_model, epochs=50, batch_size=32, verbose=1): 
+def leaveOneOut(X_train, X_test, Y_train, Y_test, original_model, epochs=50, batch_size=32, verbose=1, clear=True): 
     loo = LeaveOneOut()
     loo.get_n_splits(X_test)
     y_predict = []
@@ -99,8 +103,8 @@ def leaveOneOut(X_train, X_test, Y_train, Y_test, original_model, epochs=50, bat
         X_fold_test = X_test[test_i]
         Y_fold_test = Y_test[test_i]
         
-        # new_model = clone_model(original_model)
-        new_model = ClearWeights(original_model)
+        new_model = clone_model(original_model)
+        # new_model = ClearWeights(original_model)
         Compile(new_model)
         
         start_time = time.time()
@@ -132,15 +136,18 @@ def leaveOneOut(X_train, X_test, Y_train, Y_test, original_model, epochs=50, bat
     return cm, mean_time
 
 # Realizes Leave One Out only in the test set, while the training is always used
-def holdOut(X_train, X_test, Y_train, Y_test, original_model, epochs=50, batch_size=32, verbose=1): 
+def holdOut(X_train, X_test, Y_train, Y_test, original_model, epochs=50, batch_size=32, verbose=1, clearModel=True): 
     labels_test = Y_test
   
-    new_model = ClearWeights(original_model)
+    new_model = original_model
+    if (clearModel):
+        new_model = ClearWeights(original_model)
+    
     Compile(new_model)
     
     start_time = time.time()
     
-    h = new_model.fit(X_train, Y_train, epochs=epochs, batch_size=batch_size, verbose=0)
+    # h = new_model.fit(X_train, Y_train, epochs=epochs, batch_size=batch_size, verbose=0)
     
     end_time = time.time()
     seconds = end_time - start_time
@@ -172,14 +179,17 @@ def main():
     
     
     originalNN_parameters = {'input_size_net':(224,224,3), 'output_size':1}
-    # NASExperiment(X, Y, "OriginalNN", OriginalNN, originalNN_parameters, batch_size=32)
+    # NASExperiment(X, Y, "OriginalNN 2", OriginalNN, originalNN_parameters, batch_size=32)
     
     autokeras_parameters = {'validation_split':0.15, 'epochs':50, 'max_trials':20}
     # NASExperiment(X, Y, "Autokeras", autokerasModel, autokeras_parameters)
     
     fpnas_parameters = {'validation_split':0.30, 'P':4, 'Q':10, 'E':10, 'T':1, 'D':None, 'batch_size':32,
                         'blocks_size':[32, 64]}
-    NASExperiment(X, Y, "FPNAS2-B2 T1", fpnasModel, fpnas_parameters, batch_size=32, leave_one_out=False)
+    # NASExperiment(X, Y, "FPNAS2-B2 T1", fpnasModel, fpnas_parameters, batch_size=32, leave_one_out=False)
+    
+    enas_parameters = {'validation_split':0.30}
+    NASExperiment(X, Y, "ENAS 1", enasModel, enas_parameters, batch_size=32, leave_one_out=False)
 
 if __name__ == '__main__':
   main()

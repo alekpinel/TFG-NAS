@@ -82,9 +82,9 @@ def convert_Y(y_labels):
 #Instead of three classes, we will only use 2
 def convertToBinary(y):
     y2 = np.array(y)
-    y2[(y==0)] = 0
-    y2[(y==2)] = 0
-    y2[(y==1)] = 1
+    y2[(y==0)] = 1
+    y2[(y==2)] = 1
+    y2[(y==1)] = 0
     return y2
 
 
@@ -110,8 +110,9 @@ def extraerSP_SS(cmf):
   if ((tp+fp)>0):
       precision = tp / (tp+fp)
   
-  if ((sensitivity+precision)>0):
-      f1 = 2 * ((sensitivity*precision)  / (sensitivity+precision))
+  # if ((sensitivity+precision)>0):
+      # f1 = 2 * ((sensitivity*precision)  / (sensitivity+precision))
+  f1 = 0.35*sensitivity + 0.25*accuracy + 0.2*specificity + 0.2*precision
 
   return round(accuracy,3), round(specificity,3),round(sensitivity,3), round(precision,3), round(f1, 3)
 
@@ -152,7 +153,7 @@ def SummaryString(model):
     
 def createConfusionMatrix(cm,name_clf, tipo_de_clas=0, save=True):
     if(tipo_de_clas == 0):
-      labels = ["hyperplasic","adenoma/serrated"]
+      labels = ["adenoma/serrated", "hyperplasic"]
     if(tipo_de_clas == 1):
       labels = ["hyperplasic","serrated","adenoma"]
 
