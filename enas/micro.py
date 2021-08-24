@@ -163,7 +163,11 @@ class MicroNetwork(Model):
 
         self.gap = GlobalAveragePooling2D()
         self.dropout = Dropout(dropout_rate)
-        self.dense = Dense(num_classes)
+        
+        if (num_classes==2):
+            self.dense = Dense(1, activation='sigmoid')
+        else:
+            self.dense = Dense(num_classes)
 
     def call(self, x):
         prev = cur = self.stem(x)

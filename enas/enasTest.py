@@ -15,20 +15,27 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import sys, os
 from keras.preprocessing.image import load_img, img_to_array
+from keras.utils import to_categorical
 
 
 
 def enasModel(X, Y, validation_split=0.3):
     X_train, X_val, Y_train, Y_val = train_test_split(X, Y, test_size=validation_split, stratify=Y)
+    
     train_set = (X_train, Y_train)
     valid_set = (X_val, Y_val)
     
+    
     # train_set, valid_set = get_dataset()
     
-    model = MicroNetwork(num_layers=3, num_nodes=5, out_channels=20, num_classes=1, dropout_rate=0.1)
+    model = MicroNetwork(num_layers=3, num_nodes=5, out_channels=20, num_classes=2, dropout_rate=0.1)
     
-    batchsize = 8
-    epochs = 4
+    batchsize = 4
+    # epochs = 10
+    # child_steps = 500
+    # mutator_steps = 50
+    
+    epochs = 2
     child_steps = 100
     mutator_steps = 10
     
@@ -37,7 +44,8 @@ def enasModel(X, Y, validation_split=0.3):
     
     optimizer = SGD(learning_rate=0.05, momentum=0.9)
     
-    print(f"X: {train_set[0].shape} Y: {train_set[1].shape}")
+    print(f"X_train: {train_set[0].shape} Y_train: {train_set[1].shape}")
+    print(f"X_val: {valid_set[0].shape} Y_val: {valid_set[1].shape}")
     
     trainer = enas.EnasTrainer(model,
                                loss=loss,
@@ -123,6 +131,7 @@ def main():
     
     print (dataset_train[0].shape)
     print (dataset_train[1].shape)
+    print (dataset_train[1][:15])
     
     # enasModel(dataset_train[0], dataset_train[1])
     

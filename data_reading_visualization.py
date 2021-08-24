@@ -82,9 +82,9 @@ def convert_Y(y_labels):
 #Instead of three classes, we will only use 2
 def convertToBinary(y):
     y2 = np.array(y)
-    y2[(y==0)] = 1
-    y2[(y==2)] = 1
-    y2[(y==1)] = 0
+    y2[(y==0)] = 0
+    y2[(y==2)] = 0
+    y2[(y==1)] = 1
     return y2
 
 

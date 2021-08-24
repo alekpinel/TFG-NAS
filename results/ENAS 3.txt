@@ -1,38 +1,38 @@
-ENAS 1:Model: "micro_network"
+ENAS 3:Model: "micro_network_10"
 _________________________________________________________________
 Layer (type)                 Output Shape              Param #   
 =================================================================
-sequential (Sequential)      (8, 224, 224, 60)         1860      
+sequential_1532 (Sequential) (None, 224, 224, 60)      1860      
 _________________________________________________________________
-enas_layer (ENASLayer)       multiple                  63968     
+enas_layer_50 (ENASLayer)    multiple                  63968     
 _________________________________________________________________
-reduction_layer (ReductionLa multiple                  3520      
+reduction_layer_20 (Reductio multiple                  3520      
 _________________________________________________________________
-enas_layer_1 (ENASLayer)     multiple                  102688    
+enas_layer_51 (ENASLayer)    multiple                  102688    
 _________________________________________________________________
-enas_layer_2 (ENASLayer)     multiple                  102688    
+enas_layer_52 (ENASLayer)    multiple                  102688    
 _________________________________________________________________
-reduction_layer_1 (Reduction multiple                  7040      
+reduction_layer_21 (Reductio multiple                  7040      
 _________________________________________________________________
-enas_layer_3 (ENASLayer)     multiple                  250048    
+enas_layer_53 (ENASLayer)    multiple                  250048    
 _________________________________________________________________
-enas_layer_4 (ENASLayer)     multiple                  250048    
+enas_layer_54 (ENASLayer)    multiple                  250048    
 _________________________________________________________________
-global_average_pooling2d (Gl multiple                  0         
+global_average_pooling2d_10  multiple                  0         
 _________________________________________________________________
-dropout (Dropout)            multiple                  0         
+dropout_14 (Dropout)         multiple                  0         
 _________________________________________________________________
-dense (Dense)                multiple                  81        
+dense_52 (Dense)             multiple                  81        
 =================================================================
 Total params: 615,029
 Trainable params: 602,349
 Non-trainable params: 12,680
 _________________________________________________________________
 RESULTS: 
-ACC:0.261 
-SS:0.261 
+ACC:0.739 
+SS:0.739 
 SP:0.000 
 Pr:1.000 
-Score:0.357 
-Searching time:822.123 
+Score:0.643 
+Searching time:401.058 
 Fitting time:0.000

@@ -31,7 +31,8 @@ def Compile(model):
               optimizer=keras.optimizers.Adam(),
               metrics=['accuracy'])
 
-def NASExperiment(X, Y, model_name, NAS_function, NAS_parameters, test_percent=0.3, epochs=50, batch_size=32, verbose=1, save_results=True, leave_one_out=True):
+def NASExperiment(X, Y, model_name, NAS_function, NAS_parameters, test_percent=0.3, epochs=50, batch_size=32, verbose=1, save_results=True, clearModel=True):
+    leave_one_out=False
     
     # Split the data and prepare the binary
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=test_percent, stratify=Y)
@@ -67,7 +68,7 @@ def NASExperiment(X, Y, model_name, NAS_function, NAS_parameters, test_percent=0
         # With the final model, apply leave one out
         cm, fit_time = leaveOneOut(X_train, X_test, Y_train, Y_test, NAS_model, epochs=epochs, batch_size=batch_size, verbose=1)
     else:
-        cm, fit_time = holdOut(X_train, X_test, Y_train, Y_test, NAS_model, clearModel=False, epochs=epochs, batch_size=batch_size, verbose=1)
+        cm, fit_time = holdOut(X_train, X_test, Y_train, Y_test, NAS_model, clearModel=clearModel, epochs=epochs, batch_size=batch_size, verbose=1)
     
     # Extract the results and show them
     accuracy, specificity, sensitivity, precision, f1score = extraerSP_SS(cm)
@@ -142,18 +143,19 @@ def holdOut(X_train, X_test, Y_train, Y_test, original_model, epochs=50, batch_s
     new_model = original_model
     if (clearModel):
         new_model = ClearWeights(original_model)
-    
-    Compile(new_model)
+        Compile(new_model)
     
     start_time = time.time()
     
-    # h = new_model.fit(X_train, Y_train, epochs=epochs, batch_size=batch_size, verbose=0)
+    if (clearModel):
+        h = new_model.fit(X_train, Y_train, epochs=epochs, batch_size=batch_size, verbose=0)
     
     end_time = time.time()
     seconds = end_time - start_time
     
     
     y_predict = new_model(X_test)
+    print(y_predict.shape)
     y_predict = [1 if val > 0.5 else 0 for val in y_predict]
     cm = metrics.confusion_matrix(Y_test, y_predict)
     accuracy, specificity, sensitivity, precision, f1score = extraerSP_SS(cm)
@@ -179,7 +181,7 @@ def main():
     
     
     originalNN_parameters = {'input_size_net':(224,224,3), 'output_size':1}
-    # NASExperiment(X, Y, "OriginalNN 2", OriginalNN, originalNN_parameters, batch_size=32)
+    # NASExperiment(X, Y, "OriginalNN 3", OriginalNN, originalNN_parameters, batch_size=32)
     
     autokeras_parameters = {'validation_split':0.15, 'epochs':50, 'max_trials':20}
     # NASExperiment(X, Y, "Autokeras", autokerasModel, autokeras_parameters)
@@ -188,8 +190,8 @@ def main():
                         'blocks_size':[32, 64]}
     # NASExperiment(X, Y, "FPNAS2-B2 T1", fpnasModel, fpnas_parameters, batch_size=32, leave_one_out=False)
     
-    enas_parameters = {'validation_split':0.30}
-    NASExperiment(X, Y, "ENAS 1", enasModel, enas_parameters, batch_size=32, leave_one_out=False)
+    enas_parameters = {'validation_split':0.1}
+    NASExperiment(X, Y, "ENAS 3", enasModel, enas_parameters, batch_size=32, clearModel=False)
 
 if __name__ == '__main__':
   main()
