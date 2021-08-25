@@ -247,6 +247,7 @@ def predict_pytorch(X, model):
         actual = targets.numpy()
         actual = actual.reshape((len(actual), 1))
         # round to class values
+        print(yhat)
         yhat = yhat.round()
         # store
         predictions.append(yhat)

@@ -166,10 +166,10 @@ class MicroNetwork(nn.Module):
         
         self.dense = nn.Linear(c_cur, num_classes)
         
-        # if (num_classes==1):
-        #     self.final_act = nn.Sigmoid()
-        # else:
-        #     self.final_act = nn.Softmax(dim=0)
+        if (num_classes==1):
+            self.final_act = nn.Sigmoid()
+        else:
+            self.final_act = nn.Softmax(dim=0)
 
         self.reset_parameters()
 
@@ -193,7 +193,7 @@ class MicroNetwork(nn.Module):
         cur = self.gap(F.relu(cur)).view(bs, -1)
         cur = self.dropout(cur)
         logits = self.dense(cur)
-        # logits = self.final_act(logits)
+        logits = self.final_act(logits)
 
         if aux_logits is not None:
             return logits, aux_logits

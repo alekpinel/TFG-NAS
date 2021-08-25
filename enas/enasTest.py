@@ -11,7 +11,7 @@ from micro import MicroNetwork
 from nni.algorithms.nas.pytorch import enas
 from nni.nas.pytorch.callbacks import (ArchitectureCheckpoint,
                                        LRSchedulerCallback)
-from utilsenas import accuracy, reward_accuracy
+from utilsenas import accuracy, reward_accuracy, accuracy_binary, reward_accuracy_binary
 from nni.retiarii.oneshot.pytorch.enas import EnasTrainer
 from torch.utils.data import TensorDataset, DataLoader
 from torchvision import datasets, transforms
@@ -22,7 +22,8 @@ from torch.utils.data import Dataset, DataLoader
 class NumpyDataset(Dataset):
     def __init__(self, data, targets):
         self.data = data
-        self.targets = torch.LongTensor(targets)
+        # self.targets = torch.LongTensor(targets)
+        self.targets = torch.FloatTensor(targets)
         
     def __getitem__(self, index):
         x = self.data[index]
@@ -33,8 +34,9 @@ class NumpyDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
-def enasModelFromNumpy(X, Y, epochs=10, n_classes=2):
+def enasModelFromNumpy(X, Y, epochs=10, n_classes=1):
     X = np.moveaxis(X, -1, 1)
+    Y = np.reshape(Y, (len(Y), 1))
     database = NumpyDataset(X, Y)
     model = enasModel(database, n_classes=n_classes, epochs=epochs)
     return model
@@ -49,20 +51,24 @@ def enasModel(database, validation_split=0.3, n_classes=10, epochs=10):
     
     mutator = None
     ctrl_kwargs = {}
-    model = MicroNetwork(num_classes=n_classes, num_layers=6, out_channels=20, num_nodes=5, dropout_rate=0.1, use_aux_heads=False)
+    model = MicroNetwork(num_classes=n_classes, num_layers=3, out_channels=20, num_nodes=5, dropout_rate=0.1, use_aux_heads=False)
     batchsize = 128
     num_epochs = epochs
     log_frequency = 1
     ctrl_kwargs = {"tanh_constant": 1.1}
     
-    criterion = nn.CrossEntropyLoss()
+    if (n_classes > 1):
+        criterion = nn.CrossEntropyLoss()
+    else:
+        criterion = nn.BCELoss()
+        
     optimizer = torch.optim.SGD(model.parameters(), 0.05, momentum=0.9, weight_decay=1.0E-4)
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=0.001)
 
     trainer = EnasTrainer(model,
                               loss=criterion,
-                              metrics=accuracy,
-                              reward_function=reward_accuracy,
+                              metrics=accuracy_binary,
+                              reward_function=reward_accuracy_binary,
                               optimizer=optimizer,
                               batch_size=batchsize,
                               num_epochs=num_epochs,
@@ -75,12 +81,6 @@ def enasModel(database, validation_split=0.3, n_classes=10, epochs=10):
     
 def numpyToTorch(X, Y):
     return NumpyDataset(X, Y)
-    
-    # tensor_x = torch.Tensor(X) # transform to torch tensor
-    # tensor_y = torch.IntTensor(Y)
-    
-    # my_dataset = TensorDataset(tensor_x,tensor_y) # create your datset
-    # return my_dataset
     
 def torchToNumpy(database):
     train_loader = DataLoader(database, batch_size=len(database))

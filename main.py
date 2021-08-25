@@ -201,7 +201,7 @@ def main():
                         'blocks_size':[32, 64]}
     # NASExperiment(X, Y, "FPNAS2-B2 T1", fpnasModel, fpnas_parameters, batch_size=32, leave_one_out=False)
     
-    enas_parameters = {'epochs':10}
+    enas_parameters = {'epochs':20}
     NASExperiment(X, Y, "ENAS 3", enasModelFromNumpy, enas_parameters, batch_size=32, clearModel=False, api='pytorch')
 
 if __name__ == '__main__':
