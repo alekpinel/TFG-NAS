@@ -5,5 +5,5 @@ SS:0.739
 SP:0.000 
 Pr:1.000 
 Score:0.643 
-Searching time:1281.756 
+Searching time:1950.308 
 Fitting time:0.000

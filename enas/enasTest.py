@@ -34,11 +34,11 @@ class NumpyDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
-def enasModelFromNumpy(X, Y, epochs=10, n_classes=1):
+def enasModelFromNumpy(X, Y, epochs=10, n_classes=1, num_layers=3):
     X = np.moveaxis(X, -1, 1)
     Y = np.reshape(Y, (len(Y), 1))
     database = NumpyDataset(X, Y)
-    model = enasModel(database, n_classes=n_classes, epochs=epochs)
+    model = enasModel(database, n_classes=n_classes, epochs=epochs, num_layers=num_layers)
     return model
     
     
@@ -46,12 +46,12 @@ def enasModelFromNumpy(X, Y, epochs=10, n_classes=1):
     # y_true, y_predict = evaluate_model(test_dl, model)
     
 
-def enasModel(database, validation_split=0.3, n_classes=10, epochs=10):
+def enasModel(database, validation_split=0.3, n_classes=10, epochs=10, num_layers=3):
     print(f"N: {len(database)} X: {database[0][0].shape}")
     
     mutator = None
     ctrl_kwargs = {}
-    model = MicroNetwork(num_classes=n_classes, num_layers=3, out_channels=20, num_nodes=5, dropout_rate=0.1, use_aux_heads=False)
+    model = MicroNetwork(num_classes=n_classes, num_layers=num_layers, out_channels=20, num_nodes=5, dropout_rate=0.1, use_aux_heads=False)
     batchsize = 128
     num_epochs = epochs
     log_frequency = 1
