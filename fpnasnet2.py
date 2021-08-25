@@ -18,7 +18,7 @@ from keras.layers import Conv2D, MaxPooling2D, Activation, Add, Concatenate, Bat
 from keras.optimizers import SGD
 import tensorflow as tf
 from tensorflow.keras.layers import Layer, Conv2D, DepthwiseConv2D, BatchNormalization
-from data_reading_visualization import SummaryString, ReadData, convertToBinary
+from utils import SummaryString, ReadData, convertToBinary
 
 from keras.datasets import mnist, cifar10
 from keras.utils import np_utils
@@ -26,7 +26,7 @@ from sklearn.model_selection import train_test_split
 
 
 from sklearn import metrics
-from data_reading_visualization import CalculateAccuracy, extraerSP_SS, ResultsToFile, createConfusionMatrix, convertToBinary, SummaryString, PlotModelToFile, ClearWeights
+from utils import CalculateAccuracy, extraerSP_SS, ResultsToFile, createConfusionMatrix, convertToBinary, SummaryString, PlotModelToFile, ClearWeights
 
 #Write something to file
 def WriteFile(file_name, string, mode='a'):

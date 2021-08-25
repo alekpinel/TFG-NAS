@@ -114,3 +114,4 @@ dmypy.json
 .pyre/
 
 image_classifier/*
+enas/data/*

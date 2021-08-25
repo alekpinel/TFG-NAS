@@ -31,7 +31,7 @@ import statistics
 from sklearn import metrics
 import sys
 
-from data_reading_visualization import extraerSP_SS, convertToBinary
+from utils import extraerSP_SS, convertToBinary
 
 def OriginalNN(input_size_net, output_size, X=None, Y=None):
   model = Sequential()

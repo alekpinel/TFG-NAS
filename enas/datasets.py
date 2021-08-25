@@ -1,11 +1,28 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import tensorflow as tf
+from torchvision import transforms
+from torchvision.datasets import CIFAR10
 
-def get_dataset():
-    (x_train, y_train), (x_valid, y_valid) = tf.keras.datasets.cifar10.load_data()
-    x_train, x_valid = x_train / 255.0, x_valid / 255.0
-    train_set = (x_train, y_train)
-    valid_set = (x_valid, y_valid)
-    return train_set, valid_set
+
+def get_dataset(cls):
+    MEAN = [0.49139968, 0.48215827, 0.44653124]
+    STD = [0.24703233, 0.24348505, 0.26158768]
+    transf = [
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip()
+    ]
+    normalize = [
+        transforms.ToTensor(),
+        transforms.Normalize(MEAN, STD)
+    ]
+
+    train_transform = transforms.Compose(transf + normalize)
+    valid_transform = transforms.Compose(normalize)
+
+    if cls == "cifar10":
+        dataset_train = CIFAR10(root="./data", train=True, download=True, transform=train_transform)
+        dataset_valid = CIFAR10(root="./data", train=False, download=True, transform=valid_transform)
+    else:
+        raise NotImplementedError
+    return dataset_train, dataset_valid

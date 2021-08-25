@@ -18,6 +18,14 @@ import seaborn as sns
 from keras.utils import plot_model
 import tensorflow as tf
 
+from torch.utils.data import TensorDataset, DataLoader
+from torchvision import datasets, transforms
+from torch.utils.data import Dataset, DataLoader
+import torch
+
+import logging
+import os
+
 
 mainpath = "./" #Local
 #mainpath = "/content/drive/My Drive/Colab Notebooks/TFG/" #Colab
@@ -145,11 +153,14 @@ def ResultsToFile(model_name, results):
     f.write(results)
     f.close()
     
-def SummaryString(model):
-    stringlist = []
-    model.summary(print_fn=lambda x: stringlist.append(x))
-    short_model_summary = "\n".join(stringlist)
-    return short_model_summary
+def SummaryString(model, api='tensorflow'):
+    if (api == 'tensorflow'):
+        stringlist = []
+        model.summary(print_fn=lambda x: stringlist.append(x))
+        short_model_summary = "\n".join(stringlist)
+        return short_model_summary
+    else:
+        return "Not Implemented pytorch summary"
     
 def createConfusionMatrix(cm,name_clf, tipo_de_clas=0, save=True):
     if(tipo_de_clas == 0):
@@ -204,3 +215,77 @@ def ClearWeights(model):
                 var.assign(initializer(var.shape, var.dtype))
             #use the initializer    
     return model
+
+
+class NumpyDataset(Dataset):
+    def __init__(self, data, targets):
+        self.data = data
+        self.targets = torch.LongTensor(targets)
+        
+    def __getitem__(self, index):
+        x = self.data[index]
+        y = self.targets[index]
+        
+        return x, y
+    
+    def __len__(self):
+        return len(self.data)
+
+# evaluate the model
+def predict_pytorch(X, model):
+    Y = np.zeros((len(X)))
+    X = np.moveaxis(X, -1, 1)
+    database = NumpyDataset(X, Y)
+    test_dl = DataLoader(database, batch_size=32, shuffle=False)
+    
+    predictions, actuals = list(), list()
+    for i, (inputs, targets) in enumerate(test_dl):
+        # evaluate the model on the test set
+        yhat = model(inputs)
+        # retrieve numpy array
+        yhat = yhat.detach().numpy()
+        actual = targets.numpy()
+        actual = actual.reshape((len(actual), 1))
+        # round to class values
+        yhat = yhat.round()
+        # store
+        predictions.append(yhat)
+        actuals.append(actual)
+    
+    # print(predictions)
+    predictions = np.vstack(predictions)
+    
+    predictions = np.argmax(predictions, axis=1)
+    # print(predictions.shape)
+    return  predictions
+
+# evaluate the model
+def evaluate_model_pytorch(test_dl, model):
+    predictions, actuals = list(), list()
+    for i, (inputs, targets) in enumerate(test_dl):
+        # evaluate the model on the test set
+        yhat = model(inputs)
+        # retrieve numpy array
+        yhat = yhat.detach().numpy()
+        actual = targets.numpy()
+        actual = actual.reshape((len(actual), 1))
+        # round to class values
+        yhat = yhat.round()
+        # store
+        predictions.append(yhat)
+        actuals.append(actual)
+    predictions, actuals = np.vstack(predictions), np.vstack(actuals)
+    # # calculate accuracy
+    # acc = np.accuracy_score(actuals, predictions)
+    return actuals, predictions
+
+def set_tf_loglevel(level):
+    if level >= logging.FATAL:
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+    if level >= logging.ERROR:
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+    if level >= logging.WARNING:
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
+    else:
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
+    logging.getLogger('tensorflow').setLevel(level)

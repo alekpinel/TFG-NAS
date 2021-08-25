@@ -1,180 +1,200 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import tensorflow as tf
-from tensorflow.keras import Model, Sequential
-from tensorflow.keras.layers import (
-    AveragePooling2D,
-    BatchNormalization,
-    Conv2D,
-    Dense,
-    Dropout,
-    GlobalAveragePooling2D,
-    MaxPool2D,
-    ReLU,
-    SeparableConv2D,
-)
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
-from nni.nas.tensorflow.mutables import InputChoice, LayerChoice, MutableScope
+from nni.nas.pytorch import mutables
+from ops import FactorizedReduce, StdConv, SepConvBN, Pool
 
 
-def build_conv_1x1(filters, name=None):
-    return Sequential([
-        Conv2D(filters, kernel_size=1, use_bias=False),
-        BatchNormalization(trainable=False),
-        ReLU(),
-    ], name)
-
-def build_sep_conv(filters, kernel_size, name=None):
-    return Sequential([
-        ReLU(),
-        SeparableConv2D(filters, kernel_size, padding='same'),
-        BatchNormalization(trainable=True),
-    ], name)
-
-
-class FactorizedReduce(Model):
-    def __init__(self, filters):
+class AuxiliaryHead(nn.Module):
+    def __init__(self, in_channels, num_classes):
         super().__init__()
-        self.conv1 = Conv2D(filters // 2, kernel_size=1, strides=2, use_bias=False)
-        self.conv2 = Conv2D(filters // 2, kernel_size=1, strides=2, use_bias=False)
-        self.bn = BatchNormalization(trainable=False)
+        self.in_channels = in_channels
+        self.num_classes = num_classes
+        self.pooling = nn.Sequential(
+            nn.ReLU(),
+            nn.AvgPool2d(5, 3, 2)
+        )
+        self.proj = nn.Sequential(
+            StdConv(in_channels, 128),
+            StdConv(128, 768)
+        )
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.fc = nn.Linear(768, 10, bias=False)
 
-    def call(self, x):
-        out1 = self.conv1(x)
-        out2 = self.conv2(x[:, 1:, 1:, :])
-        out = tf.concat([out1, out2], axis=3)
-        out = self.bn(out)
-        return out
+    def forward(self, x):
+        bs = x.size(0)
+        x = self.pooling(x)
+        x = self.proj(x)
+        x = self.avg_pool(x).view(bs, -1)
+        x = self.fc(x)
+        return x
 
 
-class ReductionLayer(Model):
-    def __init__(self, filters):
+class Cell(nn.Module):
+    def __init__(self, cell_name, prev_labels, channels):
         super().__init__()
-        self.reduce0 = FactorizedReduce(filters)
-        self.reduce1 = FactorizedReduce(filters)
+        self.input_choice = mutables.InputChoice(choose_from=prev_labels, n_chosen=1, return_mask=True,
+                                                 key=cell_name + "_input")
+        self.op_choice = mutables.LayerChoice([
+            SepConvBN(channels, channels, 3, 1),
+            SepConvBN(channels, channels, 5, 2),
+            Pool("avg", 3, 1, 1),
+            Pool("max", 3, 1, 1),
+            nn.Identity()
+        ], key=cell_name + "_op")
 
-    def call(self, prevprev, prev):
-        return self.reduce0(prevprev), self.reduce1(prev)
-
-
-class Calibration(Model):
-    def __init__(self, filters):
-        super().__init__()
-        self.filters = filters
-        self.process = None
-
-    def build(self, shape):
-        assert len(shape) == 4  # batch_size, width, height, filters
-        if shape[3] != self.filters:
-            self.process = build_conv_1x1(self.filters)
-
-    def call(self, x):
-        if self.process is None:
-            return x
-        return self.process(x)
+    def forward(self, prev_layers):
+        from nni.retiarii.oneshot.pytorch.random import PathSamplingInputChoice
+        out = self.input_choice(prev_layers)
+        if isinstance(self.input_choice, PathSamplingInputChoice):
+            # Retiarii pattern
+            return out, self.input_choice.mask
+        else:
+            chosen_input, chosen_mask = out
+            cell_out = self.op_choice(chosen_input)
+            return cell_out, chosen_mask
 
 
-class Cell(Model):
-    def __init__(self, cell_name, prev_labels, filters):
-        super().__init__()
-        self.input_choice = InputChoice(choose_from=prev_labels, n_chosen=1, return_mask=True, key=cell_name + '_input')
-        self.op_choice = LayerChoice([
-            build_sep_conv(filters, 3),
-            build_sep_conv(filters, 5),
-            AveragePooling2D(pool_size=3, strides=1, padding='same'),
-            MaxPool2D(pool_size=3, strides=1, padding='same'),
-            Sequential(),  # Identity
-        ], key=cell_name + '_op')
-
-    def call(self, prev_layers):
-        chosen_input, chosen_mask = self.input_choice(prev_layers)
-        cell_out = self.op_choice(chosen_input)
-        return cell_out, chosen_mask
-
-
-class Node(MutableScope):
-    def __init__(self, node_name, prev_node_names, filters):
+class Node(mutables.MutableScope):
+    def __init__(self, node_name, prev_node_names, channels):
         super().__init__(node_name)
-        self.cell_x = Cell(node_name + '_x', prev_node_names, filters)
-        self.cell_y = Cell(node_name + '_y', prev_node_names, filters)
+        self.cell_x = Cell(node_name + "_x", prev_node_names, channels)
+        self.cell_y = Cell(node_name + "_y", prev_node_names, channels)
 
-    def call(self, prev_layers):
+    def forward(self, prev_layers):
         out_x, mask_x = self.cell_x(prev_layers)
         out_y, mask_y = self.cell_y(prev_layers)
         return out_x + out_y, mask_x | mask_y
 
 
-class ENASLayer(Model):
-    def __init__(self, num_nodes, filters, reduction):
+class Calibration(nn.Module):
+    def __init__(self, in_channels, out_channels):
         super().__init__()
-        self.preproc0 = Calibration(filters)
-        self.preproc1 = Calibration(filters)
+        self.process = None
+        if in_channels != out_channels:
+            self.process = StdConv(in_channels, out_channels)
 
-        self.nodes = []
-        node_labels = [InputChoice.NO_KEY, InputChoice.NO_KEY]
-        name_prefix = 'reduce' if reduction else 'normal'
+    def forward(self, x):
+        if self.process is None:
+            return x
+        return self.process(x)
+
+
+class ReductionLayer(nn.Module):
+    def __init__(self, in_channels_pp, in_channels_p, out_channels):
+        super().__init__()
+        self.reduce0 = FactorizedReduce(in_channels_pp, out_channels, affine=False)
+        self.reduce1 = FactorizedReduce(in_channels_p, out_channels, affine=False)
+
+    def forward(self, pprev, prev):
+        return self.reduce0(pprev), self.reduce1(prev)
+
+
+class ENASLayer(nn.Module):
+    def __init__(self, num_nodes, in_channels_pp, in_channels_p, out_channels, reduction):
+        super().__init__()
+        self.preproc0 = Calibration(in_channels_pp, out_channels)
+        self.preproc1 = Calibration(in_channels_p, out_channels)
+
+        self.num_nodes = num_nodes
+        name_prefix = "reduce" if reduction else "normal"
+        self.nodes = nn.ModuleList()
+        node_labels = [mutables.InputChoice.NO_KEY, mutables.InputChoice.NO_KEY]
         for i in range(num_nodes):
-            node_labels.append('{}_node_{}'.format(name_prefix, i))
-            self.nodes.append(Node(node_labels[-1], node_labels[:-1], filters))
+            node_labels.append("{}_node_{}".format(name_prefix, i))
+            self.nodes.append(Node(node_labels[-1], node_labels[:-1], out_channels))
+        self.final_conv_w = nn.Parameter(torch.zeros(out_channels, self.num_nodes + 2, out_channels, 1, 1), requires_grad=True)
+        self.bn = nn.BatchNorm2d(out_channels, affine=False)
+        self.reset_parameters()
 
-        self.conv_ops = [Conv2D(filters, kernel_size=1, padding='same', use_bias=False) for _ in range(num_nodes + 2)]
-        self.bn = BatchNormalization(trainable=False)
+    def reset_parameters(self):
+        nn.init.kaiming_normal_(self.final_conv_w)
 
-    def call(self, prevprev, prev):
-        prev_nodes_out = [self.preproc0(prevprev), self.preproc1(prev)]
-        nodes_used_mask = tf.zeros(len(self.nodes) + 2, dtype=tf.bool)
-        for i, node in enumerate(self.nodes):
-            node_out, mask = node(prev_nodes_out)
-            nodes_used_mask |= tf.pad(mask, [[0, nodes_used_mask.shape[0] - mask.shape[0]]])
+    def forward(self, pprev, prev):
+        pprev_, prev_ = self.preproc0(pprev), self.preproc1(prev)
+
+        prev_nodes_out = [pprev_, prev_]
+        nodes_used_mask = torch.zeros(self.num_nodes + 2, dtype=torch.bool, device=prev.device)
+        for i in range(self.num_nodes):
+            node_out, mask = self.nodes[i](prev_nodes_out)
+            nodes_used_mask[:mask.size(0)] |= mask.to(node_out.device)
             prev_nodes_out.append(node_out)
 
-        outputs = []
-        for used, out, conv in zip(nodes_used_mask.numpy(), prev_nodes_out, self.conv_ops):
-            if not used:
-                outputs.append(conv(out))
-        out = tf.add_n(outputs)
+        unused_nodes = torch.cat([out for used, out in zip(nodes_used_mask, prev_nodes_out) if not used], 1)
+        unused_nodes = F.relu(unused_nodes)
+        conv_weight = self.final_conv_w[:, ~nodes_used_mask, :, :, :]
+        conv_weight = conv_weight.view(conv_weight.size(0), -1, 1, 1)
+        out = F.conv2d(unused_nodes, conv_weight)
         return prev, self.bn(out)
 
 
-class MicroNetwork(Model):
-    def __init__(self, num_layers=6, num_nodes=5, out_channels=20, num_classes=10, dropout_rate=0.1):
+class MicroNetwork(nn.Module):
+    def __init__(self, num_layers=2, num_nodes=5, out_channels=24, in_channels=3, num_classes=10,
+                 dropout_rate=0.0, use_aux_heads=False):
         super().__init__()
         self.num_layers = num_layers
-        self.stem = Sequential([
-            Conv2D(out_channels * 3, kernel_size=3, padding='same', use_bias=False),
-            BatchNormalization(),
-        ])
+        self.use_aux_heads = use_aux_heads
 
-        pool_distance = num_layers // 3
-        pool_layer_indices = [pool_distance, 2 * pool_distance + 1]
+        self.stem = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels * 3, 3, 1, 1, bias=False),
+            nn.BatchNorm2d(out_channels * 3)
+        )
 
-        self.enas_layers = []
+        pool_distance = self.num_layers // 3
+        pool_layers = [pool_distance, 2 * pool_distance + 1]
+        self.dropout = nn.Dropout(dropout_rate)
 
-        filters = out_channels
-        for i in range(num_layers + 2):
-            if i in pool_layer_indices:
-                reduction = True
-                filters *= 2
-                self.enas_layers.append(ReductionLayer(filters))
-            else:
-                reduction = False
-            self.enas_layers.append(ENASLayer(num_nodes, filters, reduction))
+        self.layers = nn.ModuleList()
+        c_pp = c_p = out_channels * 3
+        c_cur = out_channels
+        for layer_id in range(self.num_layers + 2):
+            reduction = False
+            if layer_id in pool_layers:
+                c_cur, reduction = c_p * 2, True
+                self.layers.append(ReductionLayer(c_pp, c_p, c_cur))
+                c_pp = c_p = c_cur
+            self.layers.append(ENASLayer(num_nodes, c_pp, c_p, c_cur, reduction))
+            if self.use_aux_heads and layer_id == pool_layers[-1] + 1:
+                self.layers.append(AuxiliaryHead(c_cur, num_classes))
+            c_pp, c_p = c_p, c_cur
 
-        self.gap = GlobalAveragePooling2D()
-        self.dropout = Dropout(dropout_rate)
+        self.gap = nn.AdaptiveAvgPool2d(1)
         
-        if (num_classes==1):
-            self.dense = Dense(1, activation='sigmoid')
-        else:
-            self.dense = Dense(num_classes, activation='softmax')
+        self.dense = nn.Linear(c_cur, num_classes)
+        
+        # if (num_classes==1):
+        #     self.final_act = nn.Sigmoid()
+        # else:
+        #     self.final_act = nn.Softmax(dim=0)
 
-    def call(self, x):
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight)
+
+    def forward(self, x):
+        bs = x.size(0)
         prev = cur = self.stem(x)
-        for layer in self.enas_layers:
-            prev, cur = layer(prev, cur)
-        cur = tf.keras.activations.relu(cur)
-        cur = self.gap(cur)
+        aux_logits = None
+
+        for layer in self.layers:
+            if isinstance(layer, AuxiliaryHead):
+                if self.training:
+                    aux_logits = layer(cur)
+            else:
+                prev, cur = layer(prev, cur)
+
+        cur = self.gap(F.relu(cur)).view(bs, -1)
         cur = self.dropout(cur)
         logits = self.dense(cur)
+        # logits = self.final_act(logits)
+
+        if aux_logits is not None:
+            return logits, aux_logits
         return logits
