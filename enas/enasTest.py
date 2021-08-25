@@ -17,6 +17,12 @@ import sys, os
 from keras.preprocessing.image import load_img, img_to_array
 from keras.utils import to_categorical
 
+from data_reading_visualization import ReadData, CalculateAccuracy, extraerSP_SS, ResultsToFile, createConfusionMatrix, convertToBinary, SummaryString, PlotModelToFile, ClearWeights
+from sklearn import metrics
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 
 
 def enasModel(X, Y, validation_split=0.3):
@@ -28,7 +34,7 @@ def enasModel(X, Y, validation_split=0.3):
     
     # train_set, valid_set = get_dataset()
     
-    model = MicroNetwork(num_layers=3, num_nodes=5, out_channels=20, num_classes=2, dropout_rate=0.1)
+    model = MicroNetwork(num_layers=3, num_nodes=5, out_channels=20, num_classes=10, dropout_rate=0.1)
     
     batchsize = 4
     # epochs = 10
@@ -36,11 +42,15 @@ def enasModel(X, Y, validation_split=0.3):
     # mutator_steps = 50
     
     epochs = 2
-    child_steps = 100
+    child_steps = 400
     mutator_steps = 10
     
-    loss = BinaryCrossentropy(from_logits=True, reduction=Reduction.NONE)
-    # loss = SparseCategoricalCrossentropy(from_logits=True, reduction=Reduction.NONE)
+    # epochs = 1
+    # child_steps = 1
+    # mutator_steps = 1
+    
+    # loss = BinaryCrossentropy(from_logits=True, reduction=Reduction.NONE)
+    loss = SparseCategoricalCrossentropy(from_logits=True, reduction=Reduction.NONE)
     
     optimizer = SGD(learning_rate=0.05, momentum=0.9)
     
@@ -61,10 +71,30 @@ def enasModel(X, Y, validation_split=0.3):
     trainer.train()
     
     return trainer.model
-    
+
+def extract0_1(data_x, data_y):
+    y = []
+    x = []	
+	# Solo guardamos los datos cuya clase sea la 1 o la 5
+    for i in range(0,data_y.shape[0]):
+        if data_y[i] == 0 or data_y[i] == 1:
+            if data_y[i] == 0:
+                y.append(0)
+            else:
+                y.append(1)
+            x.append(data_x[i])
+			
+    x = np.array(x, np.float64)
+    y = np.array(y, np.int64).reshape((len(y), 1))
+    return x, y
+
 def get_dataset():
     (x_train, y_train), (x_valid, y_valid) = tf.keras.datasets.cifar10.load_data()
     x_train, x_valid = x_train / 255.0, x_valid / 255.0
+    
+    # x_train, y_train = extract0_1(x_train, y_train)
+    # x_valid, y_valid = extract0_1(x_valid, y_valid)
+    
     train_set = (x_train, y_train)
     valid_set = (x_valid, y_valid)
     return train_set, valid_set   
@@ -79,7 +109,7 @@ def ReadData(light='WL', input_size = (224,224)):
         Y = Y[randomize]
         return X, Y
         
-    mainpath = "./" #Local
+    mainpath = "../" #Local
     imagepath = mainpath + "data/" + light + '/'
     
     paths = [imagepath + 'adenoma', imagepath + 'hyperplasic', imagepath + 'serrated']
@@ -117,6 +147,11 @@ def ReadData(light='WL', input_size = (224,224)):
     
     return X, Y
 
+def CalculateAccuracy(Y, Pred):
+    booleans = np.equal(Y, Pred)
+    n = np.sum(booleans)
+    return n/Y.shape[0]
+
 def main():
     print("MAIN")
     np.random.seed(1)
@@ -129,13 +164,49 @@ def main():
     dataset_train, dataset_valid = get_dataset()
     #model = GeneralNetwork()
     
+    print(f"X_train: {dataset_train[0].shape} Y_train: {dataset_train[1].shape}")
+    print(f"X_val: {dataset_valid[0].shape} Y_val: {dataset_valid[1].shape}")
+    
     print (dataset_train[0].shape)
     print (dataset_train[1].shape)
     print (dataset_train[1][:15])
     
-    # enasModel(dataset_train[0], dataset_train[1])
+    model = enasModel(dataset_train[0][:100], dataset_train[1][:100])
     
+    X_test = dataset_valid[0][:100]
+    Y_test = dataset_valid[1][:100]
     
+    print(f"X_test: {X_test.shape} Y_test: {Y_test.shape}")
+    
+    y_predict = model(X_test)
+    print(y_predict.shape)
+    print(y_predict)
+    # y_predict = [1 if val > 0.5 else 0 for val in y_predict]
+    y_predict = np.argmax(y_predict, axis=1)
+    print(y_predict)
+    
+    print(np.unique(y_predict))
+    
+    accuracy = CalculateAccuracy(Y_test, y_predict)
+    print(f"Accuracy: {accuracy}")
+    
+    # cm = metrics.confusion_matrix(Y_test, y_predict)
+    # accuracy, specificity, sensitivity, precision, f1score = extraerSP_SS(cm)
+    # cm = metrics.confusion_matrix(Y_test, y_predict)
+    
+    # con_mat_df = pd.DataFrame(cm)
+
+    # figure = plt.figure(figsize=(5, 5))
+    # sns.heatmap(con_mat_df, annot=True,cmap=plt.cm.Blues)
+    # plt.title("Confusion Matrix: ")
+    # plt.tight_layout()
+    # plt.xlabel('Predicted label')
+    # plt.ylabel('True label')
+    
+    # plt.show()
+    # plt.close()
+    
+
 
 if __name__ == '__main__':
   main()
