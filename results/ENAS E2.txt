@@ -1,4 +1,4 @@
-ENAS 3:MicroNetwork(
+ENAS E2:MicroNetwork(
   (stem): Sequential(
     (0): Conv2d(3, 60, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
     (1): BatchNorm2d(60, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
@@ -1833,10 +1833,10 @@ ENAS 3:MicroNetwork(
   (final_act): Sigmoid()
 )
 RESULTS: 
-ACC:0.435 
-SS:1.000 
-SP:0.316 
-Pr:0.235 
-Score:0.569 
-Searching time:751.320 
+ACC:0.739 
+SS:0.739 
+SP:0.000 
+Pr:1.000 
+Score:0.643 
+Searching time:48.628 
 Fitting time:0.000

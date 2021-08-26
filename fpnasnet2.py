@@ -26,7 +26,7 @@ from sklearn.model_selection import train_test_split
 
 
 from sklearn import metrics
-from utils import CalculateAccuracy, extraerSP_SS, ResultsToFile, createConfusionMatrix, convertToBinary, SummaryString, PlotModelToFile, ClearWeights
+from utils import CalculateAccuracy, extraerSP_SS, ResultsToFile, createConfusionMatrix, convertToBinary, SummaryString, PlotModelToFile
 
 #Write something to file
 def WriteFile(file_name, string, mode='a'):

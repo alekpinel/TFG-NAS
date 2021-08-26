@@ -22,6 +22,8 @@ from torch.utils.data import TensorDataset, DataLoader
 from torchvision import datasets, transforms
 from torch.utils.data import Dataset, DataLoader
 import torch
+from torchsummary import summary
+import torch.nn as nn
 
 import logging
 import os
@@ -160,7 +162,9 @@ def SummaryString(model, api='tensorflow'):
         short_model_summary = "\n".join(stringlist)
         return short_model_summary
     else:
-        return "Not Implemented pytorch summary"
+        # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # model = model.to(device)
+        return str(model)
     
 def createConfusionMatrix(cm,name_clf, tipo_de_clas=0, save=True):
     if(tipo_de_clas == 0):
@@ -189,10 +193,10 @@ def PlotModelToFile(model, model_name):
     plotpath = mainpath + "results/" + model_name + "_plot.png"
     plot_model(model, plotpath)
     
-def ClearWeights(model):
+def ClearWeightsTensorflow(model):
     for layer in model.layers:
         if isinstance(layer, tf.keras.Model): #if you're using a model as a layer
-            ClearWeights(layer) #apply function recursively
+            ClearWeightsTensorflow(layer) #apply function recursively
             continue
 
         #where are the initializers?
@@ -216,11 +220,19 @@ def ClearWeights(model):
             #use the initializer    
     return model
 
+def ClearWeightsPytorch(model):
+    def weight_reset(m):
+        reset_parameters = getattr(m, "reset_parameters", None)
+        if callable(reset_parameters):
+            m.reset_parameters()
+    
+    model.apply(weight_reset)
+    return model
 
 class NumpyDataset(Dataset):
     def __init__(self, data, targets):
         self.data = data
-        self.targets = torch.LongTensor(targets)
+        self.targets = torch.FloatTensor(targets)
         
     def __getitem__(self, index):
         x = self.data[index]
@@ -238,27 +250,62 @@ def predict_pytorch(X, model):
     database = NumpyDataset(X, Y)
     test_dl = DataLoader(database, batch_size=32, shuffle=False)
     
-    predictions, actuals = list(), list()
+    predictions = list()
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    
     for i, (inputs, targets) in enumerate(test_dl):
+        device_inputs, device_targets = inputs.to(device), targets.to(device)
+        
         # evaluate the model on the test set
-        yhat = model(inputs)
+        with torch.no_grad():
+            yhat = model(device_inputs)
         # retrieve numpy array
-        yhat = yhat.detach().numpy()
-        actual = targets.numpy()
-        actual = actual.reshape((len(actual), 1))
+        yhat = yhat.detach().cpu().numpy()
         # round to class values
+        print('yhat')
         print(yhat)
         yhat = yhat.round()
         # store
         predictions.append(yhat)
-        actuals.append(actual)
     
-    # print(predictions)
     predictions = np.vstack(predictions)
-    
-    predictions = np.argmax(predictions, axis=1)
+    # print('predictions')
+    # print(predictions)
+    # print(predictions.shape)
+    # predictions = np.argmax(predictions, axis=1)
+    predictions = np.reshape(predictions, (len(predictions),))
+    # print('predictions')
+    # print(predictions)
     # print(predictions.shape)
     return  predictions
+
+def train_model_pytorch(model, X, Y, epochs=50, batch_size=32):
+    X = np.moveaxis(X, -1, 1)
+    Y = np.reshape(Y, (len(Y), 1))
+    database = NumpyDataset(X, Y)
+    train_dl = DataLoader(database, batch_size=batch_size, shuffle=True)
+    
+    # define the optimization
+    criterion = nn.BCELoss()
+    optimizer = torch.optim.SGD(model.parameters(), 0.05, momentum=0.9, weight_decay=1.0E-4)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    torch.cuda.empty_cache()
+    # enumerate epochs
+    for epoch in range(epochs):
+        # enumerate mini batches
+        for i, (inputs, targets) in enumerate(train_dl):
+            device_inputs, device_targets = inputs.to(device), targets.to(device)
+            
+            # clear the gradients
+            optimizer.zero_grad()
+            # compute the model output
+            yhat = model(device_inputs)
+            # calculate loss
+            loss = criterion(yhat, device_targets)
+            # credit assignment
+            loss.backward()
+            # update model weights
+            optimizer.step()
 
 # evaluate the model
 def evaluate_model_pytorch(test_dl, model):

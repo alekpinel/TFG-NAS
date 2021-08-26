@@ -17,7 +17,7 @@ from sklearn import metrics
 from keras.models import clone_model
 
 from utils import ReadData, CalculateAccuracy, extraerSP_SS, ResultsToFile, createConfusionMatrix, set_tf_loglevel
-from utils import convertToBinary, SummaryString, PlotModelToFile, ClearWeights, NumpyDataset, predict_pytorch
+from utils import convertToBinary, SummaryString, PlotModelToFile, ClearWeightsTensorflow, NumpyDataset, predict_pytorch, train_model_pytorch, ClearWeightsPytorch
 from original_nn import OriginalNN 
 from autokeras_model import autokerasModel
 from fpnasnet2 import fpnasModel
@@ -27,8 +27,6 @@ sys.path.insert(0, './enas')
 from enasTest import enasModel, enasModelFromNumpy
 
 import logging
-
-set_tf_loglevel(logging.FATAL)
 
 
 def Compile(model):
@@ -61,7 +59,7 @@ def NASExperiment(X, Y, model_name, NAS_function, NAS_parameters, test_percent=0
     
     if (verbose):
         print(f"{model_name}:")
-        print(SummaryString(NAS_model, api))
+        # print(SummaryString(NAS_model, api))
         
     result_s = f"{model_name}:"
     result_s += SummaryString(NAS_model, api)
@@ -143,15 +141,13 @@ def leaveOneOut(X_train, X_test, Y_train, Y_test, original_model, epochs=50, bat
 
 # Realizes Leave One Out only in the test set, while the training is always used
 def holdOut(X_train, X_test, Y_train, Y_test, original_model, epochs=50, batch_size=32, verbose=1, clearModel=True, api='tensorflow'): 
-    new_model = original_model
-    if (clearModel):
-        new_model = ClearWeights(original_model)
-        Compile(new_model)
-    
     start_time = time.time()
     
     if (clearModel):
-        h = new_model.fit(X_train, Y_train, epochs=epochs, batch_size=batch_size, verbose=0)
+        new_model = ClearModel(original_model, api=api)
+        TrainModel(new_model, X_train, Y_train, epochs=epochs, batch_size=8, api=api)
+    else:
+        new_model = original_model
     
     end_time = time.time()
     seconds = end_time - start_time
@@ -161,6 +157,22 @@ def holdOut(X_train, X_test, Y_train, Y_test, original_model, epochs=50, batch_s
     EvaluateModel(new_model, X_train, Y_train, api=api, printResults=True)
     
     return cm, mean_time
+
+def ClearModel(model, api='tensorflow'):
+    if (api=='tensorflow'):
+        new_model = ClearWeightsTensorflow(model)
+        Compile(new_model)
+        return new_model
+    elif(api=='pytorch'):
+        new_model = ClearWeightsPytorch(model)
+        return new_model
+        
+
+def TrainModel(model, X_train, Y_train, epochs=50, batch_size=32, api='tensorflow'):
+    if (api=='tensorflow'):
+        model.fit(X_train, Y_train, epochs=epochs, batch_size=batch_size, verbose=0)
+    elif(api=='pytorch'):
+        train_model_pytorch(model, X_train, Y_train, epochs=epochs, batch_size=batch_size)
 
 def EvaluateModel(model, X_test, Y_test, api='tensorflow', printResults=False):
     if (api=='tensorflow'):
@@ -183,8 +195,13 @@ def EvaluateModel(model, X_test, Y_test, api='tensorflow', printResults=False):
         createConfusionMatrix(cm, "Model", save=False)
     return cm
 
+
+
 def main():
     print("MAIN")
+    
+    set_tf_loglevel(logging.FATAL)
+    # set_tf_loglevel(logging.INFO)
     
     #Set seed for reproducible results
     seed(2)
@@ -201,8 +218,8 @@ def main():
                         'blocks_size':[32, 64]}
     # NASExperiment(X, Y, "FPNAS2-B2 T1", fpnasModel, fpnas_parameters, batch_size=32, leave_one_out=False)
     
-    enas_parameters = {'epochs':30, 'num_layers':4}
-    NASExperiment(X, Y, "ENAS 3", enasModelFromNumpy, enas_parameters, batch_size=32, clearModel=False, api='pytorch')
+    enas_parameters = {'epochs':17, 'num_layers':4, 'saveLoad':True}
+    NASExperiment(X, Y, "ENAS E20", enasModelFromNumpy, enas_parameters, batch_size=32, clearModel=False, api='pytorch')
 
 if __name__ == '__main__':
   main()
