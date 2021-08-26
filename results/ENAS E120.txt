@@ -1,0 +1,1842 @@
+ENAS E120:MicroNetwork(
+  (stem): Sequential(
+    (0): Conv2d(3, 60, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+    (1): BatchNorm2d(60, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  )
+  (dropout): Dropout(p=0.1, inplace=False)
+  (layers): ModuleList(
+    (0): ENASLayer(
+      (preproc0): Calibration(
+        (process): StdConv(
+          (conv): Sequential(
+            (0): Conv2d(60, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (1): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=False, track_running_stats=True)
+            (2): ReLU()
+          )
+        )
+      )
+      (preproc1): Calibration(
+        (process): StdConv(
+          (conv): Sequential(
+            (0): Conv2d(60, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (1): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=False, track_running_stats=True)
+            (2): ReLU()
+          )
+        )
+      )
+      (nodes): ModuleList(
+        (0): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (1): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (2): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (3): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (4): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(20, 20, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=20, bias=False)
+                  (pointwise): Conv2d(20, 20, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+      )
+      (bn): BatchNorm2d(20, eps=1e-05, momentum=0.1, affine=False, track_running_stats=True)
+    )
+    (1): ReductionLayer(
+      (reduce0): FactorizedReduce(
+        (conv1): Conv2d(60, 20, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        (conv2): Conv2d(60, 20, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=False, track_running_stats=True)
+      )
+      (reduce1): FactorizedReduce(
+        (conv1): Conv2d(20, 20, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        (conv2): Conv2d(20, 20, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=False, track_running_stats=True)
+      )
+    )
+    (2): ENASLayer(
+      (preproc0): Calibration()
+      (preproc1): Calibration()
+      (nodes): ModuleList(
+        (0): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (1): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (2): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (3): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (4): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+      )
+      (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=False, track_running_stats=True)
+    )
+    (3): ENASLayer(
+      (preproc0): Calibration()
+      (preproc1): Calibration()
+      (nodes): ModuleList(
+        (0): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (1): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (2): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (3): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (4): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(40, 40, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=40, bias=False)
+                  (pointwise): Conv2d(40, 40, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+      )
+      (bn): BatchNorm2d(40, eps=1e-05, momentum=0.1, affine=False, track_running_stats=True)
+    )
+    (4): ReductionLayer(
+      (reduce0): FactorizedReduce(
+        (conv1): Conv2d(40, 40, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        (conv2): Conv2d(40, 40, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=False, track_running_stats=True)
+      )
+      (reduce1): FactorizedReduce(
+        (conv1): Conv2d(40, 40, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        (conv2): Conv2d(40, 40, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=False, track_running_stats=True)
+      )
+    )
+    (5): ENASLayer(
+      (preproc0): Calibration()
+      (preproc1): Calibration()
+      (nodes): ModuleList(
+        (0): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (1): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (2): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (3): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (4): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+      )
+      (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=False, track_running_stats=True)
+    )
+    (6): ENASLayer(
+      (preproc0): Calibration()
+      (preproc1): Calibration()
+      (nodes): ModuleList(
+        (0): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (1): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (2): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (3): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (4): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+      )
+      (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=False, track_running_stats=True)
+    )
+    (7): ENASLayer(
+      (preproc0): Calibration()
+      (preproc1): Calibration()
+      (nodes): ModuleList(
+        (0): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (1): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (2): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (3): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+        (4): Node(
+          (cell_x): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+          (cell_y): Cell(
+            (input_choice): PathSamplingInputChoice()
+            (op_choice): PathSamplingLayerChoice(
+              (0): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (1): SepConvBN(
+                (relu): ReLU()
+                (conv): SeparableConv(
+                  (depthwise): Conv2d(80, 80, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=80, bias=False)
+                  (pointwise): Conv2d(80, 80, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                )
+                (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              )
+              (2): Pool(
+                (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+              )
+              (3): Pool(
+                (pool): MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
+              )
+              (4): Identity()
+            )
+          )
+        )
+      )
+      (bn): BatchNorm2d(80, eps=1e-05, momentum=0.1, affine=False, track_running_stats=True)
+    )
+  )
+  (gap): AdaptiveAvgPool2d(output_size=1)
+  (dense): Linear(in_features=80, out_features=1, bias=True)
+  (final_act): Sigmoid()
+)
+RESULTS: 
+ACC:0.739 
+SS:0.739 
+SP:0.000 
+Pr:1.000 
+Score:0.643 
+Searching time:946.128 
+Fitting time:0.000

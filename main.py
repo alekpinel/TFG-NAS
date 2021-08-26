@@ -212,14 +212,14 @@ def main():
     # NASExperiment(X, Y, "OriginalNN 3", OriginalNN, originalNN_parameters, batch_size=32)
     
     autokeras_parameters = {'validation_split':0.15, 'epochs':50, 'max_trials':20}
-    # NASExperiment(X, Y, "Autokeras", autokerasModel, autokeras_parameters)
+    # NASExperiment(X, Y, "Autokeras", autokerasModel, autokeras_parameters, clearModel=False)
     
-    fpnas_parameters = {'validation_split':0.30, 'P':4, 'Q':10, 'E':10, 'T':1, 'D':None, 'batch_size':32,
-                        'blocks_size':[32, 64]}
+    # fpnas_parameters = {'validation_split':0.30, 'P':4, 'Q':10, 'E':10, 'T':1, 'D':None, 'batch_size':32,
+    #                     'blocks_size':[32, 64]}
     # NASExperiment(X, Y, "FPNAS2-B2 T1", fpnasModel, fpnas_parameters, batch_size=32, leave_one_out=False)
     
     enas_parameters = {'epochs':20, 'num_layers':4, 'saveLoad':True}
-    NASExperiment(X, Y, "ENAS E100", enasModelFromNumpy, enas_parameters, batch_size=32, clearModel=False, api='pytorch')
+    NASExperiment(X, Y, "ENAS E160", enasModelFromNumpy, enas_parameters, batch_size=32, clearModel=False, api='pytorch')
 
 if __name__ == '__main__':
   main()
