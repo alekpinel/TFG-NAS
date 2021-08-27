@@ -5,6 +5,7 @@ Created on Mon Jul 12 11:03:33 2021
 @author: alekp
 """
 
+
 from tensorflow import keras
 import matplotlib.pyplot as plt
 import sys, os
@@ -22,7 +23,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from torchvision import datasets, transforms
 from torch.utils.data import Dataset, DataLoader
 import torch
-from torchsummary import summary
+# from torchsummary import summary
 import torch.nn as nn
 
 import logging

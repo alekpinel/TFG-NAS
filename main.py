@@ -5,8 +5,18 @@ Created on Fri Dec  4 09:49:23 2020
 @author: alekp
 """
 
+import os, logging
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+logging.getLogger('tensorflow').setLevel(logging.FATAL)
+
+import tensorflow as tf
+
+tf.get_logger().setLevel('ERROR')
+tf.autograph.set_verbosity(3)
+
 import math
 import numpy as np
+
 import keras
 from sklearn.model_selection import train_test_split, LeaveOneOut
 from numpy.random import seed
@@ -15,18 +25,23 @@ from tensorflow.keras.utils import to_categorical
 import statistics
 from sklearn import metrics
 from keras.models import clone_model
+import logging
 
 from utils import ReadData, CalculateAccuracy, extraerSP_SS, ResultsToFile, createConfusionMatrix, set_tf_loglevel
 from utils import convertToBinary, SummaryString, PlotModelToFile, ClearWeightsTensorflow, NumpyDataset, predict_pytorch, train_model_pytorch, ClearWeightsPytorch
 from original_nn import OriginalNN 
 from autokeras_model import autokerasModel
-from fpnasnet2 import fpnasModel
+# from fpnasnet2 import fpnasModel
+from autocnnTest import auto_cnn_test
+
+set_tf_loglevel(logging.FATAL)
+# set_tf_loglevel(logging.INFO)
 
 import sys
 sys.path.insert(0, './enas')
 from enasTest import enasModel, enasModelFromNumpy
 
-import logging
+
 
 
 def Compile(model):
@@ -34,13 +49,10 @@ def Compile(model):
               optimizer=keras.optimizers.Adam(),
               metrics=['accuracy'])
 
-def NASExperiment(X, Y, model_name, NAS_function, NAS_parameters, test_percent=0.3, epochs=50, batch_size=32, verbose=1, save_results=True, clearModel=True, api='tensorflow'):
+def NASExperiment(X_train, X_test, Y_train, Y_test, model_name, NAS_function, NAS_parameters, epochs=50, batch_size=32, verbose=1, save_results=True, clearModel=True, api='tensorflow'):
     leave_one_out=False
     
-    # Split the data and prepare the binary
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=test_percent, stratify=Y)
-    Y_train = convertToBinary(Y_train)
-    Y_test = convertToBinary(Y_test)
+    
     
     if (verbose):
         print(f"X_train: {X_train.shape} X_test: {X_test.shape}")
@@ -200,26 +212,38 @@ def EvaluateModel(model, X_test, Y_test, api='tensorflow', printResults=False):
 def main():
     print("MAIN")
     
-    set_tf_loglevel(logging.FATAL)
-    # set_tf_loglevel(logging.INFO)
-    
     #Set seed for reproducible results
     seed(2)
+    tf.random.set_seed(2)
     
     X, Y = ReadData(light='NBI')
     
+    test_percent=0.3
+    
+    # Split the data and prepare the binary
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=test_percent, stratify=Y)
+    Y_train = convertToBinary(Y_train)
+    Y_test = convertToBinary(Y_test)
+    
+    
     originalNN_parameters = {'input_size_net':(224,224,3), 'output_size':1}
-    # NASExperiment(X, Y, "OriginalNN 3", OriginalNN, originalNN_parameters, batch_size=32)
+    # NASExperiment(X_train, X_test, Y_train, Y_test, "OriginalNN 3", OriginalNN, originalNN_parameters, batch_size=32)
     
     autokeras_parameters = {'validation_split':0.15, 'epochs':50, 'max_trials':20}
-    # NASExperiment(X, Y, "Autokeras", autokerasModel, autokeras_parameters, clearModel=False)
+    # NASExperiment(X_train, X_test, Y_train, Y_test, "Autokeras", autokerasModel, autokeras_parameters, clearModel=False)
     
     # fpnas_parameters = {'validation_split':0.30, 'P':4, 'Q':10, 'E':10, 'T':1, 'D':None, 'batch_size':32,
     #                     'blocks_size':[32, 64]}
-    # NASExperiment(X, Y, "FPNAS2-B2 T1", fpnasModel, fpnas_parameters, batch_size=32, leave_one_out=False)
+    # NASExperiment(X_train, X_test, Y_train, Y_test, "FPNAS2-B2 T1", fpnasModel, fpnas_parameters, batch_size=32, leave_one_out=False)
     
     enas_parameters = {'epochs':20, 'num_layers':4, 'saveLoad':True}
-    NASExperiment(X, Y, "ENAS E160", enasModelFromNumpy, enas_parameters, batch_size=32, clearModel=False, api='pytorch')
+    # NASExperiment(X_train, X_test, Y_train, Y_test, "ENAS E160", enasModelFromNumpy, enas_parameters, batch_size=32, clearModel=False, api='pytorch')
+    
+    auto_cnn_parameters = {'val_percent':0.3, 'epochs':10, 
+                'population_size':2, 'maximal_generation_number':1, 
+                'crossover_probability':.9, 'mutation_probability':.2, 'dir_name':'tfg'}
+    NASExperiment(X_train, X_test, Y_train, Y_test, "Auto_CNN G1", auto_cnn_test, auto_cnn_parameters, batch_size=1, clearModel=False, api='tensorflow')
+    
 
 if __name__ == '__main__':
   main()
