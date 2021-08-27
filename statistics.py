@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from utils import ReadData, CalculateAccuracy, extraerSP_SS, convertToBinary
 
 #Plot bars. Data must be ("title", value) or ("title", value, color)
-def PlotBars(data, title=None, y_label=None, dateformat=True):
+def PlotBars(data, title=None, y_label=None, dateformat=False):
     strings = [i[0] for i in data]
     x = [i for i in range(len(data))]
     y = [i[1] for i in data]
@@ -45,7 +45,14 @@ def class_percentages(Y):
         data = [("Reject", percents[0], 'red'), ("No Reject", percents[1], 'blue')]
         print(f"Percent of each polyp:\nReject: {percents[0]}\nNo Reject: {percents[1]}")
     
-    PlotBars(data, "Class Percentages", "Percent", dateformat=False)
+    PlotBars(data, "Class Percentages", "Percent")
+
+
+def print_result(results, key, title='Results'):
+    data = []
+    for result in results:
+        data.append((result['name'], result[key]))
+    PlotBars(data, "Results", "Percent")
 
 def main():
     print("Statistics")
@@ -55,7 +62,16 @@ def main():
     Y = convertToBinary(Y)
     class_percentages(Y)
     
-    
+    results = []
+    results.append( {'name':'Diseño Experto',
+             'ACC':0.0,
+             'SS':0.0,
+             'SP':0.0,
+             'Pr':0.0,
+             'Score':0.0,
+             'Time':0.0,
+             
+        })
     
     
     
