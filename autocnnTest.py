@@ -11,6 +11,7 @@ import keras
 import random
 
 from sklearn.model_selection import train_test_split
+from auto_cnn.cnn_structure import SkipLayer, PoolingLayer, CNN, Layer, get_layer_from_string
 
 
 def get_binary_output_function():
@@ -22,6 +23,24 @@ def get_binary_output_function():
 
     return output_function
 
+def test_cnn_architecture(X, Y,  architecture_string, dir_name='test', epochs=50):
+    
+    batch_size=1
+    layers = get_layer_from_string(architecture_string)
+    optimizer = tf.keras.optimizers.Adam()
+    loss = keras.losses.binary_crossentropy
+    metrics = ('accuracy',)
+    extra_callbacks = None
+    main_dir = f'./auto_cnn/outputs/{dir_name}/'
+    logs_dir = f'{main_dir}logs/train_data'
+    checkpoint_dir = f'{main_dir}checkpoints'
+    
+    cnn = CNN(X.shape[1:], get_binary_output_function(), layers, optimizer=optimizer, loss=loss,
+                   metrics=metrics, extra_callbacks=extra_callbacks, logs_dir=logs_dir,
+                   checkpoint_dir=checkpoint_dir)
+    model = cnn.get_trained_model(X, Y, batch_size, epochs)
+    return model
+    
     
 def auto_cnn_test(X, Y, dir_name='test', val_percent=0.3, epochs=1, population_size=5, maximal_generation_number=1, crossover_probability = .9, mutation_probability = .2):
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=val_percent, stratify=Y)
@@ -48,12 +67,13 @@ def auto_cnn_test(X, Y, dir_name='test', val_percent=0.3, epochs=1, population_s
     extra_callbacks = None
     logs_dir = f'{main_dir}logs/train_data'
     checkpoint_dir = f'{main_dir}checkpoints'
+    population_file = f'{main_dir}population.json'
 
     a = AutoCNN(population_size=population_size,maximal_generation_number=maximal_generation_number,
                 dataset=data, output_layer=output_layer, epoch_number=epoch_number, optimizer=optimizer, loss=loss,
                 metrics=metrics, crossover_probability=crossover_probability, mutation_probability=mutation_probability,
                 mutation_operation_distribution=mutation_operation_distribution, fitness_cache=fitness_cache, extra_callbacks=extra_callbacks,
-                logs_dir=logs_dir, checkpoint_dir=checkpoint_dir,batch_size=batch_size)
+                logs_dir=logs_dir, checkpoint_dir=checkpoint_dir,batch_size=batch_size, population_file=population_file)
     best_model = a.run()
     best_model = best_model.get_trained_model(X, Y, batch_size, epochs*5)
     return best_model

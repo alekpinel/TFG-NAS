@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.keras.optimizer_v2.optimizer_v2 import OptimizerV2
 
-from auto_cnn.cnn_structure import SkipLayer, PoolingLayer, CNN, Layer
+from auto_cnn.cnn_structure import SkipLayer, PoolingLayer, CNN, Layer, get_layer_from_string
 
 
 class AutoCNN:
@@ -58,6 +58,7 @@ class AutoCNN:
                  mutation_probability: float = .2,
                  mutation_operation_distribution: Sequence[float] = None,
                  fitness_cache: str = 'fitness.json',
+                 population_file: str = 'population.json',
                  extra_callbacks: Iterable[tf.keras.callbacks.Callback] = None,
                  logs_dir: str = './logs/train_data',
                  checkpoint_dir: str = './checkpoints',
@@ -88,6 +89,7 @@ class AutoCNN:
         self.checkpoint_dir = checkpoint_dir
         self.extra_callbacks = extra_callbacks
         self.fitness_cache = fitness_cache
+        self.population_file = population_file
 
         if self.fitness_cache is not None and os.path.exists(self.fitness_cache):
             with open(self.fitness_cache) as cache:
@@ -120,15 +122,41 @@ class AutoCNN:
 
         self.input_shape = self.get_input_shape()
 
-    def initialize_from_file(self, list_layers):
+    
+    def initialize(self):
+        if self.population_file is not None and os.path.exists(self.population_file):
+            with open(self.population_file) as cache:
+                last_generation = json.load(cache)
+                n_epoch = last_generation[0]
+                last_generation = last_generation[1:]
+                
+                if (len(last_generation) == self.population_size):
+                    self.initialize_from_list(last_generation)
+                    return n_epoch 
+        
+        self.initialize_from_scratch()
+        return 0
+        
+    def store_generation(self, ngeneration):
+        if self.population_file is not None:
+            with open(self.population_file, 'w') as json_file:
+                generation = [ngeneration]
+                
+                for ind in self.population:
+                    generation.append(ind.hash)
+                
+                json.dump(generation, json_file)
+            
+
+    def initialize_from_list(self, last_generation):
         self.population.clear()
 
-        for layers in list_layers:
-            cnn = self.generate_cnn(layers)
+        for layers in last_generation:
+            cnn = self.generate_cnn(get_layer_from_string(layers))
 
             self.population.append(cnn)
 
-    def initialize(self) -> None:
+    def initialize_from_scratch(self):
         """
         Initializes the CNN population
 
@@ -169,11 +197,16 @@ class AutoCNN:
 
         Randomly selects the two filter sizes for the convolution layers, these are power of two and between 32 and 512
 
+
+        
         :return: the randomly generated SkipLayer
         """
 
         f1 = 2 ** random.randint(5, 9)
         f2 = 2 ** random.randint(5, 9)
+        # To only 128
+        # f1 = 2 ** random.randint(5, 7)
+        # f2 = 2 ** random.randint(5, 7)
         return SkipLayer(f1, f2)
 
     def random_pooling(self) -> PoolingLayer:
@@ -407,11 +440,12 @@ class AutoCNN:
         """
 
         print("Initializing Population")
-        self.initialize()
+        initial_epoch = self.initialize()
+        print(f"Starting from generation {initial_epoch}")
         print("Population Initialization Done:", self.population)
 
-        for i in range(self.maximal_generation_number):
-            print("Generation", i)
+        for i in range(initial_epoch, self.maximal_generation_number):
+            print("Generation", i+1)
 
             print("Evaluating Population fitness")
             self.evaluate_fitness(self.population)
@@ -430,6 +464,7 @@ class AutoCNN:
             print("Selecting new environment Done:", new_population)
 
             self.population = new_population
+            self.store_generation(i+1)
 
         best_cnn = sorted(self.population, key=lambda x: self.fitness[x.hash])[-1]
         print("Best CNN:", best_cnn, "Score:", self.fitness[best_cnn.hash])
