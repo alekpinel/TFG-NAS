@@ -202,11 +202,11 @@ class AutoCNN:
         :return: the randomly generated SkipLayer
         """
 
-        f1 = 2 ** random.randint(5, 9)
-        f2 = 2 ** random.randint(5, 9)
+        # f1 = 2 ** random.randint(5, 9)
+        # f2 = 2 ** random.randint(5, 9)
         # To only 128
-        # f1 = 2 ** random.randint(5, 7)
-        # f2 = 2 ** random.randint(5, 7)
+        f1 = 2 ** random.randint(5, 7)
+        f2 = 2 ** random.randint(5, 7)
         return SkipLayer(f1, f2)
 
     def random_pooling(self) -> PoolingLayer:

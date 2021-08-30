@@ -105,18 +105,25 @@ def CalculateAccuracy(Y, Pred):
     return n/Y.shape[0]
 
 def extraerSP_SS(cmf):
-  tp, fp, fn, tn = cmf.ravel()
+  # tp, fp, fn, tn = cmf.ravel()
+  tp, fn, fp, tn = cmf.ravel()
+  
+  # print(f"tp {tp} fp {fp} fn {fn} tn {tn}")
+  
+  return calculate_metrics(tp, fn, fp, tn)
+
+def calculate_metrics(tp, fn, fp, tn):
   
   accuracy = specificity = sensitivity = precision = f1 = 0
   
   if (sum([tp,fp,fn,tn])>0):
       accuracy = (tp + tn) / sum([tp,fp,fn,tn])
+      
+  if ((tp+fn)>0):
+      sensitivity = tp / (tp+fn)
 
   if ((tn+fp)>0):
       specificity = tn / (tn+fp)
-
-  if ((tp+fn)>0):
-      sensitivity = tp / (tp+fn)
 
   if ((tp+fp)>0):
       precision = tp / (tp+fp)
@@ -179,7 +186,7 @@ def createConfusionMatrix(cm,name_clf, tipo_de_clas=0, save=True):
 
     figure = plt.figure(figsize=(5, 5))
     sns.heatmap(con_mat_df, annot=True,cmap=plt.cm.Blues)
-    plt.title("Confusion Matrix: "+name_clf)
+    plt.title("Confusion Matrix: ")
     plt.tight_layout()
     plt.xlabel('Predicted label')
     plt.ylabel('True label')

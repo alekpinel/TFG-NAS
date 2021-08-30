@@ -116,3 +116,4 @@ dmypy.json
 image_classifier/*
 enas/data/*
 auto_cnn/outputs/*
+saves/*

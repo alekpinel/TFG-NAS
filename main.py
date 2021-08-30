@@ -41,9 +41,6 @@ import sys
 sys.path.insert(0, './enas')
 from enasTest import enasModel, enasModelFromNumpy
 
-
-
-
 def Compile(model):
     model.compile(loss=keras.losses.binary_crossentropy,
               optimizer=keras.optimizers.Adam(),
@@ -51,8 +48,6 @@ def Compile(model):
 
 def NASExperiment(X_train, X_test, Y_train, Y_test, model_name, NAS_function, NAS_parameters, epochs=50, batch_size=32, verbose=1, save_results=True, clearModel=True, api='tensorflow'):
     leave_one_out=False
-    
-    
     
     if (verbose):
         print(f"X_train: {X_train.shape} X_test: {X_test.shape}")
@@ -64,6 +59,8 @@ def NASExperiment(X_train, X_test, Y_train, Y_test, model_name, NAS_function, NA
     NAS_parameters['X']=X_train
     NAS_parameters['Y']=Y_train
     NAS_model = NAS_function(**NAS_parameters)
+    SaveModel(NAS_model, model_name,api)
+    
     
     end_time = time.time()
     seconds = end_time - start_time
@@ -71,7 +68,7 @@ def NASExperiment(X_train, X_test, Y_train, Y_test, model_name, NAS_function, NA
     
     if (verbose):
         print(f"{model_name}:")
-        # print(SummaryString(NAS_model, api))
+        print(SummaryString(NAS_model, api))
         
     result_s = f"{model_name}:"
     result_s += SummaryString(NAS_model, api)
@@ -163,18 +160,30 @@ def holdOut(X_train, X_test, Y_train, Y_test, original_model, epochs=50, batch_s
     
     end_time = time.time()
     seconds = end_time - start_time
-    
     mean_time = seconds
-    cm = EvaluateModel(new_model, X_test, Y_test, api=api, printResults=False, batch_size=batch_size)
+    
     EvaluateModel(new_model, X_train, Y_train, api=api, printResults=True, batch_size=batch_size)
+    cm = EvaluateModel(new_model, X_test, Y_test, api=api, printResults=False, batch_size=batch_size)
     
     return cm, mean_time
 
+def SaveModel(model, model_name, api='tensorflow'):
+    if (api=='tensorflow'):
+        model.save(f'saves/{model_name}.h5')
+    elif(api=='pytorch'):
+        pass
+
+def LoadModel(X, Y, model_name, api='tensorflow'):
+    if (api=='tensorflow'):
+        return keras.models.load_model(f'saves/{model_name}.h5')
+    elif(api=='pytorch'):
+        pass
+
 def ClearModel(model, api='tensorflow'):
     if (api=='tensorflow'):
-        new_model = ClearWeightsTensorflow(model)
-        Compile(new_model)
-        return new_model
+        model = ClearWeightsTensorflow(model)
+        Compile(model)
+        return model
     elif(api=='pytorch'):
         new_model = ClearWeightsPytorch(model)
         return new_model
@@ -182,7 +191,9 @@ def ClearModel(model, api='tensorflow'):
 
 def TrainModel(model, X_train, Y_train, epochs=50, batch_size=32, api='tensorflow'):
     if (api=='tensorflow'):
-        model.fit(X_train, Y_train, epochs=epochs, batch_size=batch_size, verbose=0)
+        model.fit(X_train, Y_train, epochs=epochs, batch_size=batch_size)
+        model.evaluate(X_train, Y_train, batch_size=batch_size)
+        
     elif(api=='pytorch'):
         train_model_pytorch(model, X_train, Y_train, epochs=epochs, batch_size=batch_size)
 
@@ -192,8 +203,10 @@ def EvaluateModel(model, X_test, Y_test, api='tensorflow', printResults=False, b
     elif(api=='pytorch'):
         y_predict = predict_pytorch(X_test, model)
         
-    print(y_predict.shape)
+    # print(y_predict)
     y_predict = [1 if val > 0.5 else 0 for val in y_predict]
+    # print(y_predict)
+    # print(Y_test)
     cm = metrics.confusion_matrix(Y_test, y_predict)
     accuracy, specificity, sensitivity, precision, f1score = extraerSP_SS(cm)
   
@@ -213,8 +226,8 @@ def main():
     print("MAIN")
     
     #Set seed for reproducible results
-    seed(2)
-    tf.random.set_seed(2)
+    seed(3)
+    tf.random.set_seed(3)
     
     X, Y = ReadData(light='NBI')
     
@@ -225,28 +238,31 @@ def main():
     Y_train = convertToBinary(Y_train)
     Y_test = convertToBinary(Y_test)
     
+    # seed(3)
+    # tf.random.set_seed(3)
+    
     
     originalNN_parameters = {'input_size_net':(224,224,3), 'output_size':1}
-    # NASExperiment(X_train, X_test, Y_train, Y_test, "OriginalNN 3", OriginalNN, originalNN_parameters, batch_size=32)
+    # NASExperiment(X_train, X_test, Y_train, Y_test, "OriginalNN 12", OriginalNN, originalNN_parameters, batch_size=32,epochs=100)
     
-    autokeras_parameters = {'validation_split':0.15, 'epochs':50, 'max_trials':20}
-    NASExperiment(X_train, X_test, Y_train, Y_test, "Autokeras 20", autokerasModel, autokeras_parameters, clearModel=False)
-    
-    # fpnas_parameters = {'validation_split':0.30, 'P':4, 'Q':10, 'E':10, 'T':1, 'D':None, 'batch_size':32,
-    #                     'blocks_size':[32, 64]}
-    # NASExperiment(X_train, X_test, Y_train, Y_test, "FPNAS2-B2 T1", fpnasModel, fpnas_parameters, batch_size=32, leave_one_out=False)
+    autokeras_parameters = {'validation_split':0.3, 'epochs':10, 'max_trials':5}
+    NASExperiment(X_train, X_test, Y_train, Y_test, "Autokeras 5", autokerasModel, autokeras_parameters, clearModel=True, api='tensorflow', batch_size=1,epochs=100)
     
     enas_parameters = {'epochs':20, 'num_layers':4, 'saveLoad':True}
-    # NASExperiment(X_train, X_test, Y_train, Y_test, "ENAS E160", enasModelFromNumpy, enas_parameters, batch_size=32, clearModel=False, api='pytorch')
+    # NASExperiment(X_train, X_test, Y_train, Y_test, "ENAS 2 E40", enasModelFromNumpy, enas_parameters, batch_size=32, clearModel=False, api='pytorch')
     
     auto_cnn_parameters = {'val_percent':0.3, 'epochs':10, 
-                'population_size':10, 'maximal_generation_number':10, 
-                'crossover_probability':.9, 'mutation_probability':.2, 'dir_name':'tfg-10G'}
-    # NASExperiment(X_train, X_test, Y_train, Y_test, "Auto_CNN G10", auto_cnn_test, auto_cnn_parameters, batch_size=1, clearModel=False, api='tensorflow')
+                'population_size':10, 'maximal_generation_number':100, 
+                'crossover_probability':.9, 'mutation_probability':.2, 'dir_name':'tfg-10P-10E'}
+    # NASExperiment(X_train, X_test, Y_train, Y_test, "Auto_CNN 10P-10E G100", auto_cnn_test, auto_cnn_parameters, clearModel=True, api='tensorflow', batch_size=32,epochs=100)
     
-    archictecture_auto_cnn_parameters = {'architecture_string':'64-512-max', 
-                                         'dir_name':'tfg', 'epochs':50}
-    # NASExperiment(X_train, X_test, Y_train, Y_test, "Auto_CNN G2", test_cnn_architecture, archictecture_auto_cnn_parameters, batch_size=1, clearModel=False, api='tensorflow')
+    archictecture_auto_cnn_parameters = {'architecture_string':'32-128',
+                                         'dir_name':'tfg', 'epochs':0}
+    # NASExperiment(X_train, X_test, Y_train, Y_test, "Auto_CNN G2", test_cnn_architecture, archictecture_auto_cnn_parameters, clearModel=True, api='tensorflow', batch_size=32,epochs=100)
+    
+    saved_model_name = "Autokeras 1"
+    saved_model_parameters = {'model_name':saved_model_name}
+    # NASExperiment(X_train, X_test, Y_train, Y_test, saved_model_name, LoadModel, saved_model_parameters, clearModel=True, api='tensorflow', batch_size=32,epochs=100)
     
 
 if __name__ == '__main__':

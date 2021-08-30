@@ -75,7 +75,7 @@ def auto_cnn_test(X, Y, dir_name='test', val_percent=0.3, epochs=1, population_s
                 mutation_operation_distribution=mutation_operation_distribution, fitness_cache=fitness_cache, extra_callbacks=extra_callbacks,
                 logs_dir=logs_dir, checkpoint_dir=checkpoint_dir,batch_size=batch_size, population_file=population_file)
     best_model = a.run()
-    best_model = best_model.get_trained_model(X, Y, batch_size, epochs*5)
+    best_model = best_model.get_trained_model(X, Y, batch_size, epochs)
     return best_model
     
     

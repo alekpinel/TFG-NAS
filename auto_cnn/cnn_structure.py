@@ -64,12 +64,14 @@ class SkipLayer(Layer):
                                             name=f'{group_name}/Conv1')(inputs)
 
         # FIXME is it the activation first or the batch norm?
-        skip_layer = tf.keras.layers.BatchNormalization(name=f'{group_name}/BatchNorm1')(skip_layer)
+        # For some reason, batchNorm are broken
+        # skip_layer = tf.keras.layers.BatchNormalization(name=f'{group_name}/BatchNorm1')(skip_layer)
         skip_layer = tf.keras.layers.Activation('relu', name=f'{group_name}/ReLU1')(skip_layer)
+        # skip_layer = tf.keras.layers.BatchNormalization(name=f'{group_name}/BatchNorm1')(skip_layer)
 
         skip_layer = tf.keras.layers.Conv2D(self.feature_size2, self.kernel, self.stride, self.convolution,
                                             name=f'{group_name}/Conv2')(skip_layer)
-        skip_layer = tf.keras.layers.BatchNormalization(name=f'{group_name}/BatchNorm2')(skip_layer)
+        # skip_layer = tf.keras.layers.BatchNormalization(name=f'{group_name}/BatchNorm2')(skip_layer)
 
         # Makes sure that the dimensionality at the skip layers are the same
         inputs = tf.keras.layers.Conv2D(self.feature_size2, (1, 1), self.stride, name=f'{group_name}/Reshape')(inputs)
@@ -100,9 +102,10 @@ class PoolingLayer(Layer):
         self.kernel = kernel
         self.pooling_type = pooling_type
 
-    def tensor_rep(self, inputs: tf.keras.layers.Layer) -> Union[
-        tf.keras.layers.MaxPool2D, tf.keras.layers.AveragePooling2D]:
-        return PoolingLayer.pooling_choices[self.pooling_type](pool_size=self.kernel, strides=self.stride)(inputs)
+    def tensor_rep(self, inputs: tf.keras.layers.Layer):
+        pooling_layer = PoolingLayer.pooling_choices[self.pooling_type](pool_size=self.kernel, strides=self.stride)(inputs)
+        pooling_layer = tf.keras.layers.Dropout(0.5)(pooling_layer)
+        return pooling_layer
 
     def __repr__(self) -> str:
         return self.pooling_type
@@ -189,6 +192,30 @@ class CNN:
         """
 
         print(self.layers)
+        
+        # model = tf.keras.models.Sequential()
+        # model.add(tf.keras.layers.Conv2D(32, kernel_size=(3, 3),
+        #                 activation='relu',
+        #                 input_shape=self.input_shape))
+        
+        # model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu'))
+        # model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2)))
+        # model.add(tf.keras.layers.Dropout(0.5))
+      
+        # model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu'))
+        # model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2)))
+        # model.add(tf.keras.layers.Dropout(0.5))
+      
+        # model.add(tf.keras.layers.Flatten())
+        
+      
+        # # model.add(Dense(output_size, activation='softmax'))
+        # model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
+        # self.model = model 
+        # return self.model
+    
+    
+    
 
         if self.model is None:
             tf.keras.backend.clear_session()  # Fixes graph appending
@@ -200,6 +227,7 @@ class CNN:
             for i, layer in enumerate(self.layers):
                 outputs = layer.tensor_rep(outputs)
 
+            outputs = tf.keras.layers.Dropout(0.5)(outputs)
             outputs = self.output_function(outputs)
 
             self.model = tf.keras.Model(inputs=inputs, outputs=outputs)
@@ -267,8 +295,9 @@ class CNN:
     def get_trained_model(self, x_train, y_train, batch_size: int = 1, epochs: int = 1):
         self.model = None
         self.generate()
-        self.model.fit(x_train,y_train, batch_size=batch_size, epochs=epochs,
-                               validation_split=.2, callbacks=self.callbacks)
+        if (epochs>0):
+            self.model.fit(x_train,y_train, batch_size=batch_size, epochs=epochs,
+                                   validation_split=.2, callbacks=self.callbacks)
         return self.model
         
         
