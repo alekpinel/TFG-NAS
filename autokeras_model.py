@@ -15,25 +15,17 @@ from sklearn.preprocessing import LabelEncoder
 import autokeras as ak
 
 
-def autokerasModel(X, Y, validation_split=0.15, epochs=50, max_trials=100, max_model_size=None):
+def autokerasModel(X, Y, validation_split=0.15, epochs=50, max_trials=100, max_model_size=None, overwrite=True):
     # print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
     
-    checkpoint_filepath = 'saves/Autokeras{epoch:02d}'
-    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath=checkpoint_filepath,
-        save_weights_only=False,
-        monitor='val_loss',
-        mode='min',
-        save_best_only=True)
-        
     # Initialize the image classifier.
     searchmodel = ak.ImageClassifier(
-        overwrite=True,
-        max_trials=max_trials, max_model_size=max_model_size)
+        overwrite=overwrite,
+        max_trials=max_trials, max_model_size=max_model_size, directory='saves/Autokeras')
     
     # Feed the image classifier with training data.
     searchmodel.fit(X, Y,
                     validation_split=validation_split,
-                    epochs=epochs,  callbacks=[model_checkpoint_callback])
+                    epochs=epochs)
     
     return searchmodel.export_model()

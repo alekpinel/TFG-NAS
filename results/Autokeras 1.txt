@@ -29,10 +29,10 @@ Trainable params: 793,793
 Non-trainable params: 7
 _________________________________________________________________
 RESULTS: 
-ACC:0.870 
-SS:0.941 
+ACC:0.652 
+SS:0.647 
 SP:0.667 
-Pr:0.889 
-Score:0.858 
-Searching time:0.138 
-Fitting time:16.653
+Pr:0.846 
+Score:0.692 
+Searching time:24.486 
+Fitting time:25.718

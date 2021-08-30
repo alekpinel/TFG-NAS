@@ -201,6 +201,8 @@ def PlotModelToFile(model, model_name):
     plotpath = mainpath + "results/" + model_name + "_plot.png"
     plot_model(model, plotpath)
     
+
+
 def ClearWeightsTensorflow(model):
     for layer in model.layers:
         if isinstance(layer, tf.keras.Model): #if you're using a model as a layer
@@ -216,6 +218,9 @@ def ClearWeightsTensorflow(model):
         for key, initializer in init_container.__dict__.items():
             if "initializer" not in key: #is this item an initializer?
                   continue #if no, skip it
+                 
+            if not hasattr(init_container, 'kernel'):
+                continue
 
             # find the corresponding variable, like the kernel or the bias
             if key == 'recurrent_initializer': #special case check
