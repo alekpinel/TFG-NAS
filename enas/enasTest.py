@@ -141,7 +141,7 @@ def enasModel(database, validation_split=0.3, n_classes=10, epochs=10, num_layer
     with open('saves/ENAS/model_json', 'w') as json_file:
         json.dump(model, json_file)
     
-    info = f"Time: total_time\nEpochs: total_epochs\n{model}"
+    info = f"Time: {total_time}\nEpochs: {total_epochs}\n{model}"
     best_model = loadENASModel(n_classes, num_layers, num_nodes, dropout_rate)
     
     return best_model, info

@@ -259,8 +259,8 @@ def main():
     autokeras_parameters = {'validation_split':0.3, 'epochs':50, 'max_trials':200, 'overwrite':False}
     # NASExperiment(X_train, X_test, Y_train, Y_test, "Autokeras 200", autokerasModel, autokeras_parameters, clearModel=True, api='tensorflow', batch_size=1,epochs=100)
     
-    enas_parameters = {'epochs':16, 'num_layers':3, 'saveLoad':True, 'num_nodes':2, 'dropout_rate':0.4}
-    NASExperiment(X_train, X_test, Y_train, Y_test, "ENAS 3L 2N E60", enasModelFromNumpy, enas_parameters, clearModel=True, api='pytorch', batch_size=4,epochs=100)
+    enas_parameters = {'epochs':19, 'num_layers':3, 'saveLoad':True, 'num_nodes':2, 'dropout_rate':0.4}
+    NASExperiment(X_train, X_test, Y_train, Y_test, "ENAS 3L 2N E80", enasModelFromNumpy, enas_parameters, clearModel=True, api='pytorch', batch_size=4,epochs=100)
     
     auto_cnn_parameters = {'val_percent':0.3, 'epochs':10, 
                 'population_size':10, 'maximal_generation_number':100, 
