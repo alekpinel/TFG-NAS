@@ -14,7 +14,6 @@ import tensorflow as tf
 tf.get_logger().setLevel('ERROR')
 tf.autograph.set_verbosity(3)
 
-import math
 import numpy as np
 
 import keras
@@ -34,13 +33,14 @@ from original_nn import OriginalNN
 from autokeras_model import autokerasModel
 # from fpnasnet2 import fpnasModel
 from autocnnTest import auto_cnn_test, test_cnn_architecture
+import torch
 
 # set_tf_loglevel(logging.FATAL)
 # set_tf_loglevel(logging.INFO)
 
 import sys
 sys.path.insert(0, './enas')
-from enasTest import enasModel, enasModelFromNumpy
+from enasTest import enasModel, enasModelFromNumpy, loadENASModel
 
 def Compile(model):
     model.compile(loss=keras.losses.binary_crossentropy,
@@ -59,7 +59,16 @@ def NASExperiment(X_train, X_test, Y_train, Y_test, model_name, NAS_function, NA
     
     NAS_parameters['X']=X_train
     NAS_parameters['Y']=Y_train
-    NAS_model = NAS_function(**NAS_parameters)
+    
+    result = NAS_function(**NAS_parameters)
+    
+    if (type(result) is tuple):
+        NAS_model = result[0]
+        extra_info = result[1]
+    else:
+        NAS_model = result
+        extra_info = ""
+    
     SaveModel(NAS_model, model_name,api)
     
     
@@ -73,6 +82,7 @@ def NASExperiment(X_train, X_test, Y_train, Y_test, model_name, NAS_function, NA
         
     result_s = f"{model_name}:"
     result_s += SummaryString(NAS_model, api)
+    result_s += f"\n{extra_info}\n"
     
     # if (save_results):
     #     PlotModelToFile(NAS_model, model_name)
@@ -172,13 +182,13 @@ def SaveModel(model, model_name, api='tensorflow'):
     if (api=='tensorflow'):
         model.save(f'saves/{model_name}.h5')
     elif(api=='pytorch'):
-        pass
+        torch.save(model, f'saves/{model_name}.h5')
 
 def LoadModel(X, Y, model_name, api='tensorflow'):
     if (api=='tensorflow'):
         return keras.models.load_model(f'saves/{model_name}.h5', custom_objects=ak.CUSTOM_OBJECTS)
     elif(api=='pytorch'):
-        pass
+        return torch.load(f'saves/{model_name}.h5')
 
 def ClearModel(model, api='tensorflow'):
     if (api=='tensorflow'):
@@ -186,8 +196,8 @@ def ClearModel(model, api='tensorflow'):
         Compile(model)
         return model
     elif(api=='pytorch'):
-        new_model = ClearWeightsPytorch(model)
-        return new_model
+        model = ClearWeightsPytorch(model)
+        return model
         
 
 def TrainModel(model, X_train, Y_train, epochs=50, batch_size=32, api='tensorflow'):
@@ -249,8 +259,8 @@ def main():
     autokeras_parameters = {'validation_split':0.3, 'epochs':50, 'max_trials':200, 'overwrite':False}
     # NASExperiment(X_train, X_test, Y_train, Y_test, "Autokeras 200", autokerasModel, autokeras_parameters, clearModel=True, api='tensorflow', batch_size=1,epochs=100)
     
-    enas_parameters = {'epochs':20, 'num_layers':4, 'saveLoad':True}
-    NASExperiment(X_train, X_test, Y_train, Y_test, "ENAS 2 E40", enasModelFromNumpy, enas_parameters, batch_size=32, clearModel=False, api='pytorch')
+    enas_parameters = {'epochs':16, 'num_layers':3, 'saveLoad':True, 'num_nodes':2, 'dropout_rate':0.4}
+    NASExperiment(X_train, X_test, Y_train, Y_test, "ENAS 3L 2N E60", enasModelFromNumpy, enas_parameters, clearModel=True, api='pytorch', batch_size=4,epochs=100)
     
     auto_cnn_parameters = {'val_percent':0.3, 'epochs':10, 
                 'population_size':10, 'maximal_generation_number':100, 
@@ -261,9 +271,15 @@ def main():
                                          'dir_name':'tfg', 'epochs':0}
     # NASExperiment(X_train, X_test, Y_train, Y_test, "Auto_CNN G2", test_cnn_architecture, archictecture_auto_cnn_parameters, clearModel=True, api='tensorflow', batch_size=32,epochs=100)
     
-    saved_model_name = "Autokeras 50"
-    saved_model_parameters = {'model_name':saved_model_name}
-    # NASExperiment(X_train, X_test, Y_train, Y_test, saved_model_name, LoadModel, saved_model_parameters, clearModel=True, api='tensorflow', batch_size=16,epochs=100)
+    saved_model_name = "ENAS 3L 2N E20"
+    api = 'pytorch'
+    saved_model_parameters = {'model_name':saved_model_name, 'api':api}
+    # NASExperiment(X_train, X_test, Y_train, Y_test, saved_model_name, LoadModel, saved_model_parameters, clearModel=True, api=api, batch_size=16,epochs=100)
+    
+    saved_ENAS_parameters = {'num_layers':3, 'num_nodes':2, 'dropout_rate':0.4}
+    # NASExperiment(X_train, X_test, Y_train, Y_test, "loaded enas model", loadENASModel, saved_ENAS_parameters, clearModel=True, api='pytorch', batch_size=16,epochs=100)
+    
+    
     
 
 if __name__ == '__main__':

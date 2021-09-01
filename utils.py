@@ -23,7 +23,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from torchvision import datasets, transforms
 from torch.utils.data import Dataset, DataLoader
 import torch
-# from torchsummary import summary
+from torchinfo import summary
 import torch.nn as nn
 
 import logging
@@ -159,7 +159,7 @@ def ShowImages(images, titles=None):
 
 def ResultsToFile(model_name, results):
     resultpath = mainpath + "results/"
-    f = open(resultpath + model_name + ".txt", "w")
+    f = open(resultpath + model_name + ".txt", "w", encoding="utf-8")
     f.write(results)
     f.close()
     
@@ -172,7 +172,11 @@ def SummaryString(model, api='tensorflow'):
     else:
         # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # model = model.to(device)
-        return str(model)
+        # return str(model)
+        model_stats =  summary(model, input_size=(32, 3, 224, 224), verbose=0, depth =10)
+        # model_str = f"{str(model)}\n{str(model_stats)}"
+        model_str = f"{str(model_stats)}"
+        return model_str
     
 def createConfusionMatrix(cm,name_clf, tipo_de_clas=0, save=True):
     if(tipo_de_clas == 0):
@@ -201,8 +205,6 @@ def PlotModelToFile(model, model_name):
     plotpath = mainpath + "results/" + model_name + "_plot.png"
     plot_model(model, plotpath)
     
-
-
 def ClearWeightsTensorflow(model):
     for layer in model.layers:
         if isinstance(layer, tf.keras.Model): #if you're using a model as a layer
@@ -275,8 +277,8 @@ def predict_pytorch(X, model):
         # retrieve numpy array
         yhat = yhat.detach().cpu().numpy()
         # round to class values
-        print('yhat')
-        print(yhat)
+        # print('yhat')
+        # print(yhat)
         yhat = yhat.round()
         # store
         predictions.append(yhat)
@@ -302,9 +304,11 @@ def train_model_pytorch(model, X, Y, epochs=50, batch_size=32):
     criterion = nn.BCELoss()
     optimizer = torch.optim.SGD(model.parameters(), 0.05, momentum=0.9, weight_decay=1.0E-4)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print(device)
     torch.cuda.empty_cache()
     # enumerate epochs
     for epoch in range(epochs):
+        running_loss = 0.0
         # enumerate mini batches
         for i, (inputs, targets) in enumerate(train_dl):
             device_inputs, device_targets = inputs.to(device), targets.to(device)
@@ -319,6 +323,10 @@ def train_model_pytorch(model, X, Y, epochs=50, batch_size=32):
             loss.backward()
             # update model weights
             optimizer.step()
+            
+            running_loss += loss.item()
+            
+        print(f"Epoch {epoch}/{epochs} loss: {running_loss/i}")
 
 # evaluate the model
 def evaluate_model_pytorch(test_dl, model):

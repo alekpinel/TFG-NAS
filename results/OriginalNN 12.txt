@@ -30,5 +30,5 @@ SS:0.824
 SP:0.667 
 Pr:0.875 
 Score:0.792 
-Searching time:0.140 
-Fitting time:19.288
+Searching time:2.006 
+Fitting time:22.894

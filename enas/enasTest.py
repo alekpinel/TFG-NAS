@@ -19,6 +19,11 @@ from torchvision import datasets, transforms
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from shutil import copyfile
+import os
+import json
+
+from nni.nas.pytorch.fixed import apply_fixed_architecture
+
 
 class NumpyDataset(Dataset):
     def __init__(self, data, targets):
@@ -34,25 +39,33 @@ class NumpyDataset(Dataset):
     
     def __len__(self):
         return len(self.data)
+    
+def loadENASModel(X, Y, n_classes=1, num_layers=3, num_nodes=5, dropout_rate=0.1, path='saves/ENAS/model_json'):
+    return loadENASModel(n_classes, num_layers, num_nodes, dropout_rate, path)
 
-def enasModelFromNumpy(X, Y, epochs=10, n_classes=1, num_layers=3, saveLoad=True):
+def loadENASModel(n_classes=1, num_layers=3, num_nodes=5, dropout_rate=0.1, path='saves/ENAS/model_json'):
+    model = model = MicroNetwork(num_classes=n_classes, num_layers=num_layers, out_channels=20, num_nodes=num_nodes, dropout_rate=dropout_rate, use_aux_heads=False)
+    apply_fixed_architecture(model, path)
+    return model
+
+def enasModelFromNumpy(X, Y, epochs=10, n_classes=1, num_layers=3, num_nodes=5, dropout_rate=0.1, saveLoad=True):
     X = np.moveaxis(X, -1, 1)
     Y = np.reshape(Y, (len(Y), 1))
     database = NumpyDataset(X, Y)
-    model = enasModel(database, n_classes=n_classes, epochs=epochs, num_layers=num_layers, saveLoad=saveLoad)
-    return model
+    best_model, extra_info = enasModel(database, n_classes=n_classes, epochs=epochs, num_layers=num_layers, saveLoad=saveLoad, num_nodes=num_nodes, dropout_rate=dropout_rate)
+    return best_model, extra_info
     
     
     # test_dl = DataLoader(test_small, batch_size=32, shuffle=False)
     # y_true, y_predict = evaluate_model(test_dl, model)
     
 
-def enasModel(database, validation_split=0.3, n_classes=10, epochs=10, num_layers=3, saveLoad=True):
+def enasModel(database, validation_split=0.3, n_classes=10, epochs=10, num_layers=3, num_nodes=5, dropout_rate=0.1, saveLoad=True):
     print(f"N: {len(database)} X: {database[0][0].shape}")
     
     mutator = None
     ctrl_kwargs = {}
-    model = MicroNetwork(num_classes=n_classes, num_layers=num_layers, out_channels=20, num_nodes=5, dropout_rate=0.1, use_aux_heads=False)
+    model = MicroNetwork(num_classes=n_classes, num_layers=num_layers, out_channels=20, num_nodes=num_nodes, dropout_rate=dropout_rate, use_aux_heads=False)
     batchsize = 128
     num_epochs = epochs
     log_frequency = 1
@@ -76,21 +89,32 @@ def enasModel(database, validation_split=0.3, n_classes=10, epochs=10, num_layer
                               dataset=database,
                               log_frequency=log_frequency,
                               ctrl_kwargs=ctrl_kwargs)
-    
+    total_epochs = 0
+    total_time = 0
     if (saveLoad):
-        savepath='saves/checkpoint.pt'
-        copy_savepath='saves/copy_checkpoint.pt'
-        copyfile(savepath, copy_savepath)
-        
-        checkpoint = torch.load(savepath)
-        trainer.model.load_state_dict(checkpoint['model'])
-        trainer.controller.load_state_dict(checkpoint['controller'])
-        # optimizer.load_state_dict(checkpoint['optimizer'])
-        total_epochs = checkpoint['total_epochs']
-        # total_epochs = 0
-        print(f"Previous epochs: {total_epochs}")
+        savepath='saves/ENAS/checkpoint.pt'
+        copy_savepath='saves/ENAS/copy_checkpoint.pt'
+        if (os.path.isfile(savepath)):
+            copyfile(savepath, copy_savepath)
+            
+            checkpoint = torch.load(savepath)
+            trainer.model.load_state_dict(checkpoint['model'])
+            trainer.controller.load_state_dict(checkpoint['controller'])
+            # optimizer.load_state_dict(checkpoint['optimizer'])
+            total_epochs = checkpoint['total_epochs']
+            total_time = checkpoint['total_time']
+            print(f"Previous epochs: {total_epochs}")
+    
+    start_time = time.time()
     
     trainer.fit()
+    
+    end_time = time.time()
+    seconds = end_time - start_time
+    
+    total_time += seconds 
+    
+    print(f"Total time: {total_time}s")
     
     if (saveLoad):
         trainer.model.to('cpu')
@@ -101,7 +125,8 @@ def enasModel(database, validation_split=0.3, n_classes=10, epochs=10, num_layer
                 'model': trainer.model.state_dict(),
                 'controller': trainer.controller.state_dict(),
                 # 'optimizer': optimizer.state_dict(),
-                'total_epochs': total_epochs
+                'total_epochs': total_epochs,
+                'total_time': total_time
         }
         
         torch.save(state,savepath)
@@ -109,11 +134,18 @@ def enasModel(database, validation_split=0.3, n_classes=10, epochs=10, num_layer
         trainer.model.to(device)
         trainer.controller.to(device)
     
-    # torch.save(trainer, "saves/trainer.pt")
-    return trainer.model
+    trainer.controller.cpu()
+    model = trainer.export()
+    print(model)
+    
+    with open('saves/ENAS/model_json', 'w') as json_file:
+        json.dump(model, json_file)
+    
+    info = f"Time: total_time\nEpochs: total_epochs\n{model}"
+    best_model = loadENASModel(n_classes, num_layers, num_nodes, dropout_rate)
+    
+    return best_model, info
 
-    # model = MLP(1)
-    # return model
     
     
 def numpyToTorch(X, Y):
@@ -167,30 +199,13 @@ def evaluate_model(test_dl, model):
 
 def main():
     print("MAIN")
+    
+    
+    loadENASModel(n_classes=1, num_layers=3, num_nodes=2, dropout_rate=0.1)
+    
+    return
     np.random.seed(1)
-    
-    predictions = []
-    yhat = np.array([[0.1], [0.5], [0.9], [0.4]])
-    # round to class values
-    print('yhat')
-    print(yhat)
-    yhat = yhat.round()
-    # store
-    predictions.append(yhat)
-    
-    predictions = np.vstack(predictions)
-    print('predictions')
-    print(predictions)
-    print(predictions.shape)
-    # predictions = np.argmax(predictions, axis=1)
-    predictions = np.reshape(predictions, (len(predictions),))
-    print('predictions')
-    print(predictions)
-    print(predictions.shape)
-    return  predictions
 
-    
-    
     dataset_train, dataset_valid = getData()
     
     train_small, _ = torch.utils.data.random_split(dataset_train, [1000, len(dataset_train)-1000])
