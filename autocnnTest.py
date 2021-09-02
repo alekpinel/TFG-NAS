@@ -31,7 +31,7 @@ def test_cnn_architecture(X, Y,  architecture_string, dir_name='test', epochs=50
     loss = keras.losses.binary_crossentropy
     metrics = ('accuracy',)
     extra_callbacks = None
-    main_dir = f'./auto_cnn/outputs/{dir_name}/'
+    main_dir = f'./saves/AutoCNN/{dir_name}/'
     logs_dir = f'{main_dir}logs/train_data'
     checkpoint_dir = f'{main_dir}checkpoints'
     
