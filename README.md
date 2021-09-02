@@ -14,9 +14,9 @@ En el fichero main hay llamadas comentadas a cada experimento. Descomentar para 
 - Pytorch 1.7.1
 Compilados con CUDA 10.1
 
-**Referencias:
+**Referencias:**
 
-ENAS:**
+**ENAS:**
 
 H. Pham, M. Guan, B. Zoph, Q. Le and J. Dean, "Efficient Neural Architecture Search via Parameter Sharing", ICML, 2018.
 Se ha utilizado la librería NNI: https://nni.readthedocs.io/en/stable/NAS/ENAS.html
