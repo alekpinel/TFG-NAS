@@ -31,16 +31,13 @@ from utils import ReadData, CalculateAccuracy, extraerSP_SS, ResultsToFile, crea
 from utils import convertToBinary, SummaryString, PlotModelToFile, ClearWeightsTensorflow, NumpyDataset, predict_pytorch, train_model_pytorch, ClearWeightsPytorch
 from original_nn import OriginalNN 
 from autokeras_model import autokerasModel
-# from fpnasnet2 import fpnasModel
 from autocnnTest import auto_cnn_test, test_cnn_architecture
 import torch
 
-# set_tf_loglevel(logging.FATAL)
-# set_tf_loglevel(logging.INFO)
 
 import sys
 sys.path.insert(0, './enas')
-from enasTest import enasModel, enasModelFromNumpy, loadENASModel
+from enasTest import enasModel, enasModelFromNumpy, loadENASMoelXY
 
 def Compile(model):
     model.compile(loss=keras.losses.binary_crossentropy,
@@ -239,6 +236,7 @@ def main():
     #Set seed for reproducible results
     seed(3)
     tf.random.set_seed(3)
+    torch.manual_seed(3)
     
     X, Y = ReadData(light='NBI')
     
@@ -249,18 +247,14 @@ def main():
     Y_train = convertToBinary(Y_train)
     Y_test = convertToBinary(Y_test)
     
-    # seed(3)
-    # tf.random.set_seed(3)
-    
-    
     originalNN_parameters = {'input_size_net':(224,224,3), 'output_size':1}
     # NASExperiment(X_train, X_test, Y_train, Y_test, "OriginalNN 12", OriginalNN, originalNN_parameters, batch_size=32,epochs=100)
     
     autokeras_parameters = {'validation_split':0.3, 'epochs':50, 'max_trials':200, 'overwrite':False}
     # NASExperiment(X_train, X_test, Y_train, Y_test, "Autokeras 200", autokerasModel, autokeras_parameters, clearModel=True, api='tensorflow', batch_size=1,epochs=100)
     
-    enas_parameters = {'epochs':19, 'num_layers':3, 'saveLoad':True, 'num_nodes':2, 'dropout_rate':0.4}
-    NASExperiment(X_train, X_test, Y_train, Y_test, "ENAS 3L 2N E80", enasModelFromNumpy, enas_parameters, clearModel=True, api='pytorch', batch_size=4,epochs=100)
+    enas_parameters = {'epochs':25, 'num_layers':3, 'saveLoad':True, 'num_nodes':2, 'dropout_rate':0.4}
+    # NASExperiment(X_train, X_test, Y_train, Y_test, "ENAS 3L 2N E200", enasModelFromNumpy, enas_parameters, clearModel=True, api='pytorch', batch_size=16,epochs=100)
     
     auto_cnn_parameters = {'val_percent':0.3, 'epochs':10, 
                 'population_size':10, 'maximal_generation_number':100, 
@@ -277,7 +271,7 @@ def main():
     # NASExperiment(X_train, X_test, Y_train, Y_test, saved_model_name, LoadModel, saved_model_parameters, clearModel=True, api=api, batch_size=16,epochs=100)
     
     saved_ENAS_parameters = {'num_layers':3, 'num_nodes':2, 'dropout_rate':0.4}
-    # NASExperiment(X_train, X_test, Y_train, Y_test, "loaded enas model", loadENASModel, saved_ENAS_parameters, clearModel=True, api='pytorch', batch_size=16,epochs=100)
+    NASExperiment(X_train, X_test, Y_train, Y_test, "loaded enas model", loadENASMoelXY, saved_ENAS_parameters, clearModel=True, api='pytorch', batch_size=16,epochs=100)
     
     
     

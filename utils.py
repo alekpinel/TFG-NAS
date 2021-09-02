@@ -128,8 +128,6 @@ def calculate_metrics(tp, fn, fp, tn):
   if ((tp+fp)>0):
       precision = tp / (tp+fp)
   
-  # if ((sensitivity+precision)>0):
-      # f1 = 2 * ((sensitivity*precision)  / (sensitivity+precision))
   f1 = 0.35*sensitivity + 0.25*accuracy + 0.2*specificity + 0.2*precision
 
   return round(accuracy,3), round(specificity,3),round(sensitivity,3), round(precision,3), round(f1, 3)
@@ -170,9 +168,6 @@ def SummaryString(model, api='tensorflow'):
         short_model_summary = "\n".join(stringlist)
         return short_model_summary
     else:
-        # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        # model = model.to(device)
-        # return str(model)
         model_stats =  summary(model, input_size=(32, 3, 224, 224), verbose=0, depth =10)
         # model_str = f"{str(model)}\n{str(model_stats)}"
         model_str = f"{str(model_stats)}"
@@ -190,7 +185,7 @@ def createConfusionMatrix(cm,name_clf, tipo_de_clas=0, save=True):
 
     figure = plt.figure(figsize=(5, 5))
     sns.heatmap(con_mat_df, annot=True,cmap=plt.cm.Blues)
-    plt.title("Confusion Matrix: ")
+    # plt.title("Confusion Matrix: ")
     plt.tight_layout()
     plt.xlabel('Predicted label')
     plt.ylabel('True label')
@@ -295,6 +290,9 @@ def predict_pytorch(X, model):
     return  predictions
 
 def train_model_pytorch(model, X, Y, epochs=50, batch_size=32):
+    original_X = X
+    original_Y = Y
+    
     X = np.moveaxis(X, -1, 1)
     Y = np.reshape(Y, (len(Y), 1))
     database = NumpyDataset(X, Y)
@@ -308,7 +306,9 @@ def train_model_pytorch(model, X, Y, epochs=50, batch_size=32):
     torch.cuda.empty_cache()
     # enumerate epochs
     for epoch in range(epochs):
+        model.train()
         running_loss = 0.0
+        n_batches = 0
         # enumerate mini batches
         for i, (inputs, targets) in enumerate(train_dl):
             device_inputs, device_targets = inputs.to(device), targets.to(device)
@@ -325,24 +325,30 @@ def train_model_pytorch(model, X, Y, epochs=50, batch_size=32):
             optimizer.step()
             
             running_loss += loss.item()
+            n_batches += 1
             
-        print(f"Epoch {epoch}/{epochs} loss: {running_loss/i}")
+        predictions = predict_pytorch(original_X, model)
+        predictions = [1 if val > 0.5 else 0 for val in predictions]
+        accuracy = CalculateAccuracy(original_Y, predictions)
+        print(f"Epoch {epoch}/{epochs} loss: {running_loss/n_batches} accuracy: {accuracy}")
 
 # evaluate the model
 def evaluate_model_pytorch(test_dl, model):
     predictions, actuals = list(), list()
-    for i, (inputs, targets) in enumerate(test_dl):
-        # evaluate the model on the test set
-        yhat = model(inputs)
-        # retrieve numpy array
-        yhat = yhat.detach().numpy()
-        actual = targets.numpy()
-        actual = actual.reshape((len(actual), 1))
-        # round to class values
-        yhat = yhat.round()
-        # store
-        predictions.append(yhat)
-        actuals.append(actual)
+    with torch.no_grad():
+        model.eval()
+        for i, (inputs, targets) in enumerate(test_dl):
+            # evaluate the model on the test set
+            yhat = model(inputs)
+            # retrieve numpy array
+            yhat = yhat.detach().numpy()
+            actual = targets.numpy()
+            actual = actual.reshape((len(actual), 1))
+            # round to class values
+            yhat = yhat.round()
+            # store
+            predictions.append(yhat)
+            actuals.append(actual)
     predictions, actuals = np.vstack(predictions), np.vstack(actuals)
     # # calculate accuracy
     # acc = np.accuracy_score(actuals, predictions)

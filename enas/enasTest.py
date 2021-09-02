@@ -40,7 +40,7 @@ class NumpyDataset(Dataset):
     def __len__(self):
         return len(self.data)
     
-def loadENASModel(X, Y, n_classes=1, num_layers=3, num_nodes=5, dropout_rate=0.1, path='saves/ENAS/model_json'):
+def loadENASMoelXY(X, Y, n_classes=1, num_layers=3, num_nodes=5, dropout_rate=0.1, path='saves/ENAS/model_json'):
     return loadENASModel(n_classes, num_layers, num_nodes, dropout_rate, path)
 
 def loadENASModel(n_classes=1, num_layers=3, num_nodes=5, dropout_rate=0.1, path='saves/ENAS/model_json'):
