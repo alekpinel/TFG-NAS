@@ -45,8 +45,6 @@ def Compile(model):
               metrics=['accuracy'])
 
 def NASExperiment(X_train, X_test, Y_train, Y_test, model_name, NAS_function, NAS_parameters, epochs=50, batch_size=32, verbose=1, save_results=True, clearModel=True, api='tensorflow'):
-    leave_one_out=False
-    
     if (verbose):
         print(f"X_train: {X_train.shape} X_test: {X_test.shape}")
     
@@ -81,14 +79,7 @@ def NASExperiment(X_train, X_test, Y_train, Y_test, model_name, NAS_function, NA
     result_s += SummaryString(NAS_model, api)
     result_s += f"\n{extra_info}\n"
     
-    # if (save_results):
-    #     PlotModelToFile(NAS_model, model_name)
-    
-    if (leave_one_out):
-        # With the final model, apply leave one out
-        cm, fit_time = leaveOneOut(X_train, X_test, Y_train, Y_test, NAS_model, epochs=epochs, batch_size=batch_size, verbose=1, api=api)
-    else:
-        cm, fit_time = holdOut(X_train, X_test, Y_train, Y_test, NAS_model, clearModel=clearModel, epochs=epochs, batch_size=batch_size, verbose=1, api=api)
+    cm, fit_time = holdOut(X_train, X_test, Y_train, Y_test, NAS_model, clearModel=clearModel, epochs=epochs, batch_size=batch_size, verbose=1, api=api)
     
     # Extract the results and show them
     accuracy, specificity, sensitivity, precision, f1score = extraerSP_SS(cm)
@@ -247,19 +238,34 @@ def main():
     Y_train = convertToBinary(Y_train)
     Y_test = convertToBinary(Y_test)
     
+    
+    ########################### Hand-made neural network  ###########################
+    
     originalNN_parameters = {'input_size_net':(224,224,3), 'output_size':1}
     # NASExperiment(X_train, X_test, Y_train, Y_test, "OriginalNN 12", OriginalNN, originalNN_parameters, batch_size=32,epochs=100)
     
-    autokeras_parameters = {'validation_split':0.3, 'epochs':50, 'max_trials':200, 'overwrite':False}
+    
+    ########################### ENAS - Reinforcement Learning  ###########################
+    
+    enas_parameters = {'epochs':1, 'num_layers':3, 'saveLoad':False, 'num_nodes':2, 'dropout_rate':0.4}
+    NASExperiment(X_train, X_test, Y_train, Y_test, "ENAS 3L 2N E1", enasModelFromNumpy, enas_parameters, clearModel=True, api='pytorch', batch_size=16,epochs=100)
+    
+    
+    ########################### Auto-Keras - Bayesian Optimization  ###########################
+    
+    autokeras_parameters = {'validation_split':0.3, 'epochs':100, 'max_trials':200, 'overwrite':False}
     # NASExperiment(X_train, X_test, Y_train, Y_test, "Autokeras 200", autokerasModel, autokeras_parameters, clearModel=True, api='tensorflow', batch_size=1,epochs=100)
     
-    enas_parameters = {'epochs':25, 'num_layers':3, 'saveLoad':True, 'num_nodes':2, 'dropout_rate':0.4}
-    # NASExperiment(X_train, X_test, Y_train, Y_test, "ENAS 3L 2N E200", enasModelFromNumpy, enas_parameters, clearModel=True, api='pytorch', batch_size=16,epochs=100)
+    
+    ########################### Auto CNN - Evolutive Algorithm  ###########################
     
     auto_cnn_parameters = {'val_percent':0.3, 'epochs':10, 
                 'population_size':10, 'maximal_generation_number':100, 
                 'crossover_probability':.9, 'mutation_probability':.2, 'dir_name':'tfg-10P-10E'}
     # NASExperiment(X_train, X_test, Y_train, Y_test, "Auto_CNN 10P-10E G100", auto_cnn_test, auto_cnn_parameters, clearModel=True, api='tensorflow', batch_size=32,epochs=100)
+    
+    
+    
     
     archictecture_auto_cnn_parameters = {'architecture_string':'32-128',
                                          'dir_name':'tfg', 'epochs':0}
@@ -271,7 +277,7 @@ def main():
     # NASExperiment(X_train, X_test, Y_train, Y_test, saved_model_name, LoadModel, saved_model_parameters, clearModel=True, api=api, batch_size=16,epochs=100)
     
     saved_ENAS_parameters = {'num_layers':3, 'num_nodes':2, 'dropout_rate':0.4}
-    NASExperiment(X_train, X_test, Y_train, Y_test, "loaded enas model", loadENASMoelXY, saved_ENAS_parameters, clearModel=True, api='pytorch', batch_size=16,epochs=100)
+    # NASExperiment(X_train, X_test, Y_train, Y_test, "loaded enas model", loadENASMoelXY, saved_ENAS_parameters, clearModel=True, api='pytorch', batch_size=16,epochs=100)
     
     
     
