@@ -219,7 +219,10 @@ def EvaluateModel(model, X_test, Y_test, api='tensorflow', printResults=False, b
         createConfusionMatrix(cm, "Model", save=False)
     return cm
 
-
+def TestSavedModel(X_train, X_test, Y_train, Y_test, saved_model_name, api='tensorflow'):
+    saved_model_parameters = {'model_name':saved_model_name, 'api':api}
+    NASExperiment(X_train, X_test, Y_train, Y_test, saved_model_name, LoadModel, saved_model_parameters, clearModel=True, api=api, batch_size=16,epochs=100)
+    
 
 def main():
     print("MAIN")
@@ -247,37 +250,26 @@ def main():
     
     ########################### ENAS - Reinforcement Learning  ###########################
     
-    enas_parameters = {'epochs':1, 'num_layers':3, 'saveLoad':False, 'num_nodes':2, 'dropout_rate':0.4}
-    NASExperiment(X_train, X_test, Y_train, Y_test, "ENAS 3L 2N E1", enasModelFromNumpy, enas_parameters, clearModel=True, api='pytorch', batch_size=16,epochs=100)
+    enas_parameters = {'epochs':200, 'num_layers':3, 'saveLoad':True, 'num_nodes':2, 'dropout_rate':0.4}
+    # NASExperiment(X_train, X_test, Y_train, Y_test, "ENAS 3L 2N E200", enasModelFromNumpy, enas_parameters, clearModel=True, api='pytorch', batch_size=16,epochs=100)
     
     
     ########################### Auto-Keras - Bayesian Optimization  ###########################
     
-    autokeras_parameters = {'validation_split':0.3, 'epochs':100, 'max_trials':200, 'overwrite':False}
-    # NASExperiment(X_train, X_test, Y_train, Y_test, "Autokeras 200", autokerasModel, autokeras_parameters, clearModel=True, api='tensorflow', batch_size=1,epochs=100)
+    autokeras_parameters = {'validation_split':0.3, 'epochs':200, 'max_trials':200, 'overwrite':False}
+    # NASExperiment(X_train, X_test, Y_train, Y_test, "Autokeras 200", autokerasModel, autokeras_parameters, clearModel=True, api='tensorflow', batch_size=16,epochs=100)
     
     
     ########################### Auto CNN - Evolutive Algorithm  ###########################
     
     auto_cnn_parameters = {'val_percent':0.3, 'epochs':10, 
-                'population_size':10, 'maximal_generation_number':100, 
-                'crossover_probability':.9, 'mutation_probability':.2, 'dir_name':'tfg-10P-10E'}
-    # NASExperiment(X_train, X_test, Y_train, Y_test, "Auto_CNN 10P-10E G100", auto_cnn_test, auto_cnn_parameters, clearModel=True, api='tensorflow', batch_size=32,epochs=100)
+                'population_size':10, 'maximal_generation_number':1, 
+                'crossover_probability':.9, 'mutation_probability':.2, 'dir_name':'tfg-10P-10E2'}
+    # NASExperiment(X_train, X_test, Y_train, Y_test, "Auto_CNN 10P-10E G50", auto_cnn_test, auto_cnn_parameters, clearModel=True, api='tensorflow', batch_size=16,epochs=100)
     
     
     
     
-    archictecture_auto_cnn_parameters = {'architecture_string':'32-128',
-                                         'dir_name':'tfg', 'epochs':0}
-    # NASExperiment(X_train, X_test, Y_train, Y_test, "Auto_CNN G2", test_cnn_architecture, archictecture_auto_cnn_parameters, clearModel=True, api='tensorflow', batch_size=32,epochs=100)
-    
-    saved_model_name = "ENAS 3L 2N E20"
-    api = 'pytorch'
-    saved_model_parameters = {'model_name':saved_model_name, 'api':api}
-    # NASExperiment(X_train, X_test, Y_train, Y_test, saved_model_name, LoadModel, saved_model_parameters, clearModel=True, api=api, batch_size=16,epochs=100)
-    
-    saved_ENAS_parameters = {'num_layers':3, 'num_nodes':2, 'dropout_rate':0.4}
-    # NASExperiment(X_train, X_test, Y_train, Y_test, "loaded enas model", loadENASMoelXY, saved_ENAS_parameters, clearModel=True, api='pytorch', batch_size=16,epochs=100)
     
     
     

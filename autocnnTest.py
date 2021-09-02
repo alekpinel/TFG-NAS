@@ -1,17 +1,10 @@
-import os
-
-
-
 import tensorflow as tf
 from auto_cnn.gan import AutoCNN
-
-import numpy as np
 import keras
-
-import random
-
 from sklearn.model_selection import train_test_split
 from auto_cnn.cnn_structure import SkipLayer, PoolingLayer, CNN, Layer, get_layer_from_string
+import os, json
+import time
 
 
 def get_binary_output_function():
@@ -52,7 +45,7 @@ def auto_cnn_test(X, Y, dir_name='test', val_percent=0.3, epochs=1, population_s
     data = {'x_train': X_train[:values], 'y_train': Y_train[:values], 'x_test': X_test, 'y_test': Y_test}
 
     batch_size=1
-    main_dir = f'./auto_cnn/outputs/{dir_name}/'
+    main_dir = f'./saves/AutoCNN/{dir_name}/'
     population_size=population_size
     maximal_generation_number=maximal_generation_number
     output_layer=get_binary_output_function()
@@ -68,12 +61,39 @@ def auto_cnn_test(X, Y, dir_name='test', val_percent=0.3, epochs=1, population_s
     logs_dir = f'{main_dir}logs/train_data'
     checkpoint_dir = f'{main_dir}checkpoints'
     population_file = f'{main_dir}population.json'
+    extra_info_path = f'{main_dir}info.json'
+    
+    total_generations = 0
+    total_time = 0
+    if os.path.exists(extra_info_path):
+            with open(extra_info_path) as json_file:
+                info = json.load(json_file)
+                total_generations = info[0]
+                total_time = info[1]
 
+    
     a = AutoCNN(population_size=population_size,maximal_generation_number=maximal_generation_number,
                 dataset=data, output_layer=output_layer, epoch_number=epoch_number, optimizer=optimizer, loss=loss,
                 metrics=metrics, crossover_probability=crossover_probability, mutation_probability=mutation_probability,
                 mutation_operation_distribution=mutation_operation_distribution, fitness_cache=fitness_cache, extra_callbacks=extra_callbacks,
                 logs_dir=logs_dir, checkpoint_dir=checkpoint_dir,batch_size=batch_size, population_file=population_file)
+    
+    start_time = time.time()
+    
     best_model = a.run()
     best_model = best_model.get_trained_model(X, Y, batch_size, epochs)
-    return best_model
+    
+    end_time = time.time()
+    seconds = end_time - start_time
+    
+    total_time += seconds 
+    total_generations += maximal_generation_number
+
+    with open(extra_info_path, 'w') as json_file:
+        extra_info = [total_generations, total_time]
+        json.dump(extra_info, json_file)
+    
+    extra_info_str = f"Total generations: {total_generations}\nTotal time: {total_time}"
+    print(extra_info_str)
+    
+    return best_model, extra_info_str

@@ -1,33 +1,21 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Jul 12 11:03:33 2021
-
-@author: alekp
-"""
-
-
-from tensorflow import keras
 import matplotlib.pyplot as plt
-import sys, os
+import  os
 import pandas as pd
 from keras.preprocessing.image import load_img, img_to_array
 import numpy as np
-from sklearn.metrics import plot_confusion_matrix, balanced_accuracy_score
 from tensorflow.keras.utils import to_categorical
 from sklearn.preprocessing import LabelEncoder
 import seaborn as sns
 from keras.utils import plot_model
 import tensorflow as tf
 
-from torch.utils.data import TensorDataset, DataLoader
-from torchvision import datasets, transforms
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
+from torch.utils.data import Dataset
 import torch
 from torchinfo import summary
 import torch.nn as nn
 
 import logging
-import os
 
 
 mainpath = "./" #Local
@@ -271,22 +259,12 @@ def predict_pytorch(X, model):
             yhat = model(device_inputs)
         # retrieve numpy array
         yhat = yhat.detach().cpu().numpy()
-        # round to class values
-        # print('yhat')
-        # print(yhat)
         yhat = yhat.round()
         # store
         predictions.append(yhat)
     
     predictions = np.vstack(predictions)
-    # print('predictions')
-    # print(predictions)
-    # print(predictions.shape)
-    # predictions = np.argmax(predictions, axis=1)
     predictions = np.reshape(predictions, (len(predictions),))
-    # print('predictions')
-    # print(predictions)
-    # print(predictions.shape)
     return  predictions
 
 def train_model_pytorch(model, X, Y, epochs=50, batch_size=32):

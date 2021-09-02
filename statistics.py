@@ -62,23 +62,10 @@ def print_metrics(tp, fn, fp, tn):
 def main():
     print("Statistics")
     
-    print_metrics(15, 2, 2, 4)
-    return
-    
     X, Y = ReadData(light='NBI')
     class_percentages(Y)
     Y = convertToBinary(Y)
     class_percentages(Y)
-    
-    results = []
-    results.append( {'name':'Diseño Experto',
-             'ACC':0.739,
-             'SS':0.762,
-             'SP':0.500,
-             'Pr':0.941,
-             'Score':0.740,
-             'Time':24.510,
-        })
     
     
     
