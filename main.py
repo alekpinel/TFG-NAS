@@ -245,7 +245,7 @@ def main():
     ########################### Hand-made neural network  ###########################
     
     originalNN_parameters = {'input_size_net':(224,224,3), 'output_size':1}
-    # NASExperiment(X_train, X_test, Y_train, Y_test, "OriginalNN 12", OriginalNN, originalNN_parameters, batch_size=32,epochs=100)
+    NASExperiment(X_train, X_test, Y_train, Y_test, "OriginalNN 12", OriginalNN, originalNN_parameters, batch_size=32,epochs=100)
     
     
     ########################### ENAS - Reinforcement Learning  ###########################
@@ -266,13 +266,7 @@ def main():
                 'population_size':10, 'maximal_generation_number':1, 
                 'crossover_probability':.9, 'mutation_probability':.2, 'dir_name':'tfg-10P-10E2'}
     # NASExperiment(X_train, X_test, Y_train, Y_test, "Auto_CNN 10P-10E G50", auto_cnn_test, auto_cnn_parameters, clearModel=True, api='tensorflow', batch_size=16,epochs=100)
-    
-    
-    
-    
-    
-    
-    
+
 
 if __name__ == '__main__':
   main()
